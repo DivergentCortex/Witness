@@ -100,12 +100,12 @@ The lifecycle:
 Every log line follows the CMTrace XML-ish format:
 
 ```
-<![LOG[message text]LOG]!><time="HH:mm:ss.fff+offset" date="MM-dd-yyyy" component="CallerName" context="DOMAIN\user" type="N" thread="PID" file="Source">
+<![LOG[message text]LOG]!><time="HH:mm:ss.fff" date="MM-dd-yyyy" component="CallerName" context="DOMAIN\user" type="N" thread="PID" file="Source">
 ```
 
 Field details:
 
-- **time:** `HH:mm:ss.fff` with UTC offset in total minutes appended directly (e.g., `14:30:45.123-300` for US Eastern).
+- **time:** `HH:mm:ss.fff` local time only. No UTC offset suffix. This is a deliberate divergence from the donor (which appended UTC offset minutes) per operator preference: always local time, always readable without timezone arithmetic.
 - **date:** `MM-dd-yyyy` (CMTrace convention, not ISO).
 - **component:** Auto-detected from the call stack. If the caller is a named function, uses the function name. If it is a script body, uses the script filename without extension. Overridable via `-Component`.
 - **context:** Per-write identity (see above).

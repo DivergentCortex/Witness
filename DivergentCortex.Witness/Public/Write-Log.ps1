@@ -204,11 +204,10 @@ function Write-Log {
             if ([string]::IsNullOrEmpty($Component)) { $Component = 'Unknown' }
         }
 
-        # ---- Timestamp (CMTrace format preserved exactly) ----
+        # ---- Timestamp (local time, no UTC offset - deliberate operator preference) ----
         $DateTime  = Get-Date
         $LogDate   = $DateTime.ToString('MM-dd-yyyy')
-        $UtcOffset = [TimeZoneInfo]::Local.GetUtcOffset($DateTime).TotalMinutes
-        $LogTime   = "$($DateTime.ToString('HH:mm:ss.fff'))$UtcOffset"
+        $LogTime   = $DateTime.ToString('HH:mm:ss.fff')
 
         # ---- Severity -> CMTrace type numeric mapping ----
         $severityType = '1'
