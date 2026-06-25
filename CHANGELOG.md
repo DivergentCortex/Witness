@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026.06.25.023] - 2026-06-25
+### docs: Update .NOTES signature to match donor co-author line
+
+What changed:
+- Replaced 'Curt & Claude // Divergent Cortex' one-liner with proper framed signature block matching donor lineage: Curtis Leggett & S.Henry / Divergent Cortex, in all 6 function files
+
+Why:
+- Signature should reflect the actual co-author credit from the donor (Curtis Leggett & S.Henry) and the org (Divergent Cortex). S.Henry is Claude's pen name in the donor. No rot-prone fields (filename, version, date).
+
+
 ## [2026.06.25.022] - 2026-06-25
 ### docs: Add .NOTES signature block to all function CBH
 
