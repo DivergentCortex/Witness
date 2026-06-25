@@ -35,9 +35,8 @@ Import-Module DivergentCortex.Witness
 ```powershell
 Import-Module DivergentCortex.Witness
 
-# Set a log path and initialize
-$logPath = Join-Path $PSScriptRoot ("logs\MyScript_{0}.log" -f (Get-Date -Format 'yyyyMMdd'))
-Initialize-Log -LogFilePath $logPath -ScriptName 'MyScript' -Version '1.0'
+# Set a log path and initialize (logs/ folder beside the script, gitignored)
+Initialize-Log -LogFilePath "$PSScriptRoot/logs/MyScript.log" -ScriptName 'MyScript' -Version '1.0'
 
 # Log at different severities
 Write-Log -Message 'Starting work'              -Severity Info

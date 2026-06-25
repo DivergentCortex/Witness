@@ -20,8 +20,9 @@ BeforeAll {
     # ---- Locate module manifest ----
     $script:ManifestPath = Join-Path $PSScriptRoot '..' 'DivergentCortex.Witness.psd1'
 
-    # ---- Temp directory for all test log files ----
-    $script:TestTempDir = Join-Path ([System.IO.Path]::GetTempPath()) "WitnessTests_$PID"
+    # ---- Log directory for all test log files (repo-local, gitignored) ----
+    $script:TestTempDir = Join-Path $PSScriptRoot '..' 'logs' "WitnessTests_$PID"
+    $script:TestTempDir = [System.IO.Path]::GetFullPath($script:TestTempDir)
     New-Item -Path $script:TestTempDir -ItemType Directory -Force | Out-Null
 
     # ---- Import module fresh ----
@@ -71,8 +72,8 @@ BeforeAll {
         'file="[^"]*">$'
     )
 
-    # Pattern for the time field value: HH:mm:ss.fff followed by a UTC offset
-    $script:TimeFieldRegex = 'time="(\d{2}:\d{2}:\d{2}\.\d{3}-?\d+(\.\d+)?)"'
+    # Pattern for the time field value: local HH:mm:ss.fff, no UTC offset (deliberate operator preference)
+    $script:TimeFieldRegex = 'time="(\d{2}:\d{2}:\d{2}\.\d{3})"'
 }
 
 AfterAll {
@@ -160,13 +161,13 @@ Describe 'CMTrace line shape' {
         $line | Should -Match '\[LOG\[wrap-check\]LOG\]'
     }
 
-    It 'contains time= field with HH:mm:ss.fff format plus UTC offset' {
+    It 'contains time= field with local HH:mm:ss.fff format and no UTC offset' {
         $logPath = & $script:NewTestLogPath -Suffix '_timestamp'
         Initialize-Log -LogFilePath $logPath -ScriptName 'PesterTest' -Version '0.0'
         Write-Log -Message 'ts-check' -Logfile $logPath -Severity Info -WriteBackToHost:$false
 
         $line = & $script:GetLastLogLine -Path $logPath
-        $line | Should -Match 'time="\d{2}:\d{2}:\d{2}\.\d{3}-?\d+'
+        $line | Should -Match 'time="\d{2}:\d{2}:\d{2}\.\d{3}"'
     }
 
     It 'contains date= field in MM-dd-yyyy format' {
@@ -534,18 +535,18 @@ Describe 'Line ending consistency' {
 }
 
 # ============================================================
-# DESCRIBE 8 - Timestamp time= field format (HH:mm:ss.fff + UTC offset)
+# DESCRIBE 8 - Timestamp time= field format (local HH:mm:ss.fff, no UTC offset)
 # ============================================================
 Describe 'Timestamp time= field format' {
 
-    It 'time= value matches HH:mm:ss.fff followed by UTC offset minutes (integer or decimal)' {
+    It 'time= value matches local HH:mm:ss.fff with no UTC offset suffix' {
         $logPath = & $script:NewTestLogPath -Suffix '_ts_format'
         Initialize-Log -LogFilePath $logPath -ScriptName 'TimestampTest' -Version '0.0'
         Write-Log -Message 'ts-fmt' -Logfile $logPath -Severity Info -WriteBackToHost:$false
 
         $line = & $script:GetLastLogLine -Path $logPath
-        # time= field: HH:mm:ss.fff then an optional minus sign then digits (UTC offset in minutes)
-        $line | Should -Match 'time="\d{2}:\d{2}:\d{2}\.\d{3}-?\d+'
+        # time= field: exactly HH:mm:ss.fff, closing quote immediately after milliseconds
+        $line | Should -Match 'time="\d{2}:\d{2}:\d{2}\.\d{3}"'
     }
 
     It 'time= value milliseconds field is exactly 3 digits' {

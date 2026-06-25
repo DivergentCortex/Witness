@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026.06.25.018] - 2026-06-25
+### feat(Write-Log): Local time only in CMTrace time= field; test logs move to repo-local logs/ dir
+
+What changed:
+- Changed Write-Log.ps1 time= field from HH:mm:ss.fff+UTC_offset to plain HH:mm:ss.fff local time: removed UtcOffset computation ([TimeZoneInfo]::Local.GetUtcOffset().TotalMinutes), set LogTime = DateTime.ToString('HH:mm:ss.fff'). Applies to main log line, rotation notice, and contention/retry notice (all three reuse the same LogTime variable)
+- Updated DivergentCortex.Witness/tests/DivergentCortex.Witness.Tests.ps1: changed TestTempDir from [System.IO.Path]::GetTempPath() to repo-local logs/ folder resolved via $PSScriptRoot (gitignored); updated $script:TimeFieldRegex to match HH:mm:ss.fff with no offset; updated It descriptions and match patterns in Describe 2 and Describe 8 to assert no offset suffix
+- Updated DivergentCortex.Witness/docs/ARCHITECTURE.md: CMTrace format example updated to show HH:mm:ss.fff without offset; time= field description updated to state local time only with explicit note that this is a deliberate donor divergence per operator preference
+- Updated README.md Quick Start example: replaced two-line Join-Path+Initialize-Log pattern with single-line Initialize-Log -LogFilePath "$PSScriptRoot/logs/MyScript.log" form, showing logs/ folder beside the script
+
+Why:
+- Operator directive: plain local time is always readable without timezone arithmetic. UTC offset suffix removed as deliberate divergence from donor behavior. Test logs moved off OS temp dir per operator directive (logs go to logs/ folder, not OS temp). Pester 57/57 green after changes.
+
+
 ## Background
 
 DivergentCortex.Witness is the public, cross-platform rebuild of a Windows-only
