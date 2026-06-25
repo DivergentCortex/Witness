@@ -1,22 +1,3 @@
-# Public/Initialize-Log.ps1
-# Writes a structured header banner to the log and populates module-scope context cache.
-# Must be called once before Write-Log to establish the log file path.
-#
-# Fix references:
-#   [1/3] Stores -LogFilePath to $script:WitnessLogFilePath. Also reads caller-scope
-#         $LogFilePath via $PSCmdlet.SessionState.PSVariable.GetValue for back-compat.
-#         NOTE: caller-scope resolution works for same-session-state callers; cannot cross
-#         a foreign-module boundary. Under Import-Module, pass -LogFilePath explicitly or
-#         set $Global:LogFilePath before calling. Calling Initialize-Log a second time
-#         resets the one-time cleanup guard (each call = one cleanup pass for that log tree).
-#   [2]   Resets $script:WitnessCleanupRan = $false so a second Initialize-Log (new
-#         log tree / new session) triggers auto-cleanup again. Guard is per-session,
-#         not per-module-import.
-#   [4]   Calls Get-PlatformContext (cross-platform adapter) for the banner ONLY via a
-#         local variable. Result is NOT stored in module scope ($script:WitnessContext
-#         removed - it was dead state: assigned but never read after this function returns).
-#         Write-Log resolves context= cheaply per line without the cached adapter result.
-
 function Initialize-Log {
     <#
     .SYNOPSIS
@@ -42,6 +23,9 @@ function Initialize-Log {
 
     .EXAMPLE
         Initialize-Log -LogFilePath "C:\Logs\MyScript_20260601.log" -ScriptName "MyScript" -Version "1.0"
+
+    .NOTES
+        Curt & Claude // Divergent Cortex
     #>
     [CmdletBinding()]
     Param (

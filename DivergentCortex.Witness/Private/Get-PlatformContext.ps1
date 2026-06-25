@@ -20,6 +20,9 @@ function Get-PlatformContext {
     .EXAMPLE
         $ctx = Get-PlatformContext
         Write-Host "Running on $($ctx.Platform) as $($ctx.IdentityName)"
+
+    .NOTES
+        Curt & Claude // Divergent Cortex
     #>
     [CmdletBinding()]
     param()
