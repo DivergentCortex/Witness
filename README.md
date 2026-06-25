@@ -2,7 +2,7 @@
 
 **There is always a Witness.**
 
-A hardened, cross-platform, CMTrace-compatible logging module for PowerShell. Born from four years of daily use in SCCM deployments, scheduled tasks, and remote automation on Windows, then rebuilt as a proper module that runs everywhere PowerShell does.
+A hardened, cross-platform, CMTrace-compatible logging module for PowerShell. The core logger was originally written in April 2023 and spent three years in daily production use across SCCM deployments, scheduled tasks, and remote automation before being rebuilt as a proper module that runs everywhere PowerShell does.
 
 Three exported functions. Zero breaking changes from the original. Drop it into an existing script and it works the same way it always did, except now it also runs on Linux and macOS.
 
