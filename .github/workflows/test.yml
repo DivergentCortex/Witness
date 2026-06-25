@@ -1,0 +1,49 @@
+name: Pester Tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            shell: pwsh
+            label: Linux-pwsh
+          - os: macos-latest
+            shell: pwsh
+            label: macOS-pwsh
+          - os: windows-latest
+            shell: pwsh
+            label: Windows-pwsh
+          - os: windows-latest
+            shell: powershell
+            label: Windows-PS51
+
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.label }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pester v5
+        shell: ${{ matrix.shell }}
+        run: |
+          if (-not (Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version -ge [version]'5.0.0' })) {
+            Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -SkipPublisherCheck
+          }
+
+      - name: Run tests
+        shell: ${{ matrix.shell }}
+        run: |
+          Import-Module Pester -MinimumVersion 5.0.0
+          $config = New-PesterConfiguration
+          $config.Run.Path = 'Cortex-Write-Log/tests/'
+          $config.Run.Exit = $true
+          $config.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $config

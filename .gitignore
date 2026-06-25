@@ -1,0 +1,16 @@
+# Logs produced by the module during local testing
+logs/
+*.log
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.claude/
+
+# Donor reference code - excluded from public release (contains employer reference)
+Cortex-Write-Log/donor-code/
+
+# Archive artifacts
+*.7z
