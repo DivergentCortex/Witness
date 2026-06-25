@@ -12,7 +12,7 @@ Tagline: "There is always a Witness."
 
 ## Hard constraints
 
-1. The donor `Cortex-Write-Log/donor-code/Write-Log.ps1` is NEVER edited. It is the
+1. The donor `DivergentCortex.Witness/donor-code/Write-Log.ps1` is NEVER edited. It is the
    read-only behavioral spec. It is "the best PowerShell Write-Log ever" per the owner;
    4 years of hardening. We re-implement from it, we do not mutate it.
 2. Public function names are unchanged: `Write-Log`, `Initialize-Log`, `Write-LogFinal`.
@@ -45,7 +45,7 @@ Windows-specific mechanisms have verified Linux equivalents; 0 rejected.
 ## Proposed module layout
 
 ```
-DivergentCortex.Witness/            (rename of Cortex-Write-Log module folder)
+DivergentCortex.Witness/            (folder renamed from Cortex-Write-Log, completed)
   DivergentCortex.Witness.psd1      manifest; exports the 3 functions; tags Windows/Linux/MacOS; PSEdition Core+Desktop
   DivergentCortex.Witness.psm1      loader; dot-source Private then Public
   Public/
@@ -107,6 +107,6 @@ File ownership partitioned so no two teammates edit the same file.
 ## Open questions for review
 
 - Is the single-adapter shape right, or should identity vs session vs service be separate private helpers?
-- Folder rename Cortex-Write-Log -> DivergentCortex.Witness: any downside?
+- Folder rename Cortex-Write-Log -> DivergentCortex.Witness: completed in 2026-06-25 session.
 - Any risk to exact CMTrace parity from the username-source change on Windows (WindowsIdentity retained on Windows, so should be none)?
 - 5.1 platform-probe approach: safest pattern?

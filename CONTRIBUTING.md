@@ -6,10 +6,10 @@ Contributions are welcome. Here is how to do it cleanly.
 
 1. Fork the repository and create a branch from `main`.
 2. Make your changes. Keep commits focused - one logical change per commit.
-3. Add or update tests in `Cortex-Write-Log/tests/` to cover your change.
+3. Add or update tests in `DivergentCortex.Witness/tests/` to cover your change.
 4. Run the test suite locally before pushing:
    ```powershell
-   Invoke-Pester -Path Cortex-Write-Log/tests/ -Output Detailed
+   Invoke-Pester -Path DivergentCortex.Witness/tests/ -Output Detailed
    ```
    All tests must pass on your platform.
 5. Open a pull request against `main`. Describe what you changed and why.
@@ -19,8 +19,8 @@ Contributions are welcome. Here is how to do it cleanly.
 - PowerShell 5.1 syntax only - no ternary operators, no `??`, no `??=`.
 - ASCII only in all source files. No smart quotes, em dashes, or other
   non-ASCII characters.
-- Private helpers go in `Cortex-Write-Log/Private/`. Public functions go
-  in `Cortex-Write-Log/Public/`. Do not add new public exports without
+- Private helpers go in `DivergentCortex.Witness/Private/`. Public functions go
+  in `DivergentCortex.Witness/Public/`. Do not add new public exports without
   discussion.
 - CMTrace line format must remain byte-compatible with the existing output.
   If you change Write-Log.ps1, run Describe 2 and 8 from the test suite to

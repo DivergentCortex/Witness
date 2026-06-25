@@ -10,7 +10,7 @@ Thumbs.db
 .claude/
 
 # Donor reference code - excluded from public release (contains employer reference)
-Cortex-Write-Log/donor-code/
+DivergentCortex.Witness/donor-code/
 
 # Archive artifacts
 *.7z
