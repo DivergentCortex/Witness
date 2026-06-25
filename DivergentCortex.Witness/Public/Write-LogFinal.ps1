@@ -1,20 +1,3 @@
-# Public/Write-LogFinal.ps1
-# Writes the final log entry and triggers log cleanup.
-# Use as the last log call in a script.
-#
-# Fix references:
-#   [1]   Double-cleanup guard: checks $script:WitnessCleanupRan before calling Clear-LogFile.
-#         Sets sentinel to $true after running. Write-Log's auto-cleanup uses the same sentinel.
-#   [2]   Uses $script:WitnessLogFilePath, not the undefined $LogFile donor bug (line ~510).
-#   [1/3] Caller-scope $LogFilePath resolution via Resolve-WitnessLogPath (same layers as Write-Log).
-#         NOTE: caller-scope resolution works for same-session-state callers; cannot cross
-#         a foreign-module boundary. Under Import-Module, use Initialize-Log -LogFilePath.
-#   [6]   ValidateSet includes 'Success' and 'Information' to match Write-Log's accepted set.
-#   [R1]  Config-aware retention: passes -MaxAgeDays resolved via module-scope/global-override,
-#         matching the resolution Write-Log uses. Both cleanup paths apply the same policy.
-#   [R3]  Sentinel set on ALL return paths (including path-resolution failures) so no retry
-#         path can trigger a second cleanup in the same session.
-
 function Write-LogFinal {
     <#
     .SYNOPSIS
@@ -40,6 +23,9 @@ function Write-LogFinal {
 
     .EXAMPLE
         Write-LogFinal -Message "Script completed." -Severity Success
+
+    .NOTES
+        Curt & Claude // Divergent Cortex
     #>
     [CmdletBinding()]
     Param(

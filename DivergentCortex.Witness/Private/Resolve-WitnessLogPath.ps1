@@ -20,6 +20,9 @@ function Resolve-WitnessLogPath {
 
     .EXAMPLE
         $path = Resolve-WitnessLogPath -CallerResolved $userSuppliedPath
+
+    .NOTES
+        Curt & Claude // Divergent Cortex
     #>
     [CmdletBinding()]
     param(

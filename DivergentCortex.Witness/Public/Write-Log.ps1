@@ -1,24 +1,3 @@
-# Public/Write-Log.ps1
-# CMTrace-compatible structured logger.
-# API is IDENTICAL to the donor - zero breaking changes for existing consumers.
-#
-# Fix references:
-#   [1/3] Path resolved in order: explicit -Logfile param -> caller-scope $LogFilePath
-#         (via $PSCmdlet.SessionState.PSVariable.GetValue) -> $script:WitnessLogFilePath
-#         -> $Global:LogFilePath. Restores dot-source-era "just set $LogFilePath" pattern.
-#         NOTE: caller-scope resolution works when the caller is in the same session state
-#         (direct call, dot-sourced helper). It cannot cross a foreign-module boundary.
-#         Under Import-Module, the recommended pattern is Initialize-Log -LogFilePath or
-#         $Global:LogFilePath set before the first Write-Log call.
-#   [4]   context= resolved per write (not from cache): WindowsIdentity on Windows,
-#         [Environment]::UserDomainName\UserName on non-Windows. Matches donor behavior
-#         (impersonation-correct on Windows). No heavy adapter per line.
-#   [5]   Line endings: StreamWriter.NewLine set to [System.Environment]::NewLine so
-#         the rotation notice (direct file write) matches normal lines on each platform.
-#   [11]  No PS7-only syntax. All if/else blocks, 5.1-safe throughout.
-#   [12]  $script:WitnessCleanupRan guard in module scope; checked and set here.
-#   [13]  Global config vars honored for back-compat; module-scope defaults used when absent.
-
 function Write-Log {
     <#
     .SYNOPSIS
@@ -72,6 +51,9 @@ function Write-Log {
         } catch {
             Write-Log -Message $_.Exception.Message -Severity Error
         }
+
+    .NOTES
+        Curt & Claude // Divergent Cortex
     #>
     [CmdletBinding()]
     Param (

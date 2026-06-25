@@ -17,6 +17,9 @@ function Clear-LogFile {
 
     .EXAMPLE
         Clear-LogFile -LogFolder "C:\Logs" -MaxAgeDays 14
+
+    .NOTES
+        Curt & Claude // Divergent Cortex
     #>
     [CmdletBinding()]
     Param(
