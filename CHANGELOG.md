@@ -1,5 +1,26 @@
 # Changelog
 
+## Background
+
+DivergentCortex.Witness is the public, cross-platform rebuild of a Windows-only
+Write-Log script originally written in April 2023 (donor version 2026.03.24.010)
+and hardened over three years of real SCCM deployments, scheduled tasks, and remote
+automation before this public release. The donor is preserved read-only at
+DivergentCortex.Witness/donor-code/Write-Log.ps1 and was never modified; the module
+re-implements its behavior with cross-platform support and a proper module structure
+added on top.
+
+## [2026.06.25.017] - 2026-06-25
+### docs(repo): Add Background section documenting real lineage of DivergentCortex.Witness
+
+What changed:
+- Added Background section at top of CHANGELOG.md citing donor origin date April 2023 (version 2026.03.24.010) and three years of private SCCM deployment hardening before public release
+- Added one-sentence lineage note to README.md describing the script's origin as a battle-tested Windows logger rebuilt cross-platform
+
+Why:
+- Coordinator directive: add honest background/heritage note anchored to real donor header data (Created on 4/23/2023, Version 2026.03.24.010) - no fabricated dates or history
+
+
 ## [2026.06.25.016] - 2026-06-25
 ### chore(repo): Public release prep: exclusions, test portability, CI workflow, security docs, history replacement
 
