@@ -30,10 +30,10 @@ $script:WitnessCleanupRan  = $false  # Set by Write-Log or Write-LogFinal; reset
 $script:WitnessAutoCleanup    = $true
 $script:WitnessMaxSizeMB      = 10
 $script:WitnessMaxAgeDays     = 7
-$script:WitnessVerboseConsole = $true
-$script:WitnessVerboseLogfile = $true
-$script:WitnessDebugConsole   = $true
-$script:WitnessDebugLogfile   = $true
+$script:WitnessVerboseConsole = $false
+$script:WitnessVerboseLogfile = $false
+$script:WitnessDebugConsole   = $false
+$script:WitnessDebugLogfile   = $false
 
 # ---- Load Private helpers first ----
 $privatePath = Join-Path $PSScriptRoot 'Private'
