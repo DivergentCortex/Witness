@@ -21,10 +21,10 @@ PSGallery publish is planned but not yet live. For now, clone and import directl
 
 ```powershell
 git clone https://github.com/DivergentCortex/Witness.git
-Import-Module ./Witness/Cortex-Write-Log/DivergentCortex.Witness.psd1
+Import-Module ./Witness/DivergentCortex.Witness/DivergentCortex.Witness.psd1
 ```
 
-Or copy the `Cortex-Write-Log` folder into any directory on your `$env:PSModulePath` and import by name:
+Or copy the `DivergentCortex.Witness` folder into any directory on your `$env:PSModulePath` and import by name:
 
 ```powershell
 Import-Module DivergentCortex.Witness
@@ -96,7 +96,7 @@ The module's internal structure follows a one-file-per-function layout with a pl
 
 The adapter result is used only for the Initialize-Log start banner. Write-Log resolves `context=` cheaply per write: `WindowsIdentity.GetCurrent().Name` on Windows, `[Environment]::UserDomainName\UserName` on non-Windows. This keeps impersonation-correct identity on Windows without running the full adapter on every log line.
 
-For details on module internals, see [docs/ARCHITECTURE.md](Cortex-Write-Log/docs/ARCHITECTURE.md).
+For details on module internals, see [docs/ARCHITECTURE.md](DivergentCortex.Witness/docs/ARCHITECTURE.md).
 
 ## Configuration
 
@@ -123,7 +123,7 @@ The module reaches full behavioral parity on Linux and macOS for everything that
 - **SCCM/CMSite drive handling:** Windows-only. The module detects when the working directory is on a ConfigMgr PSDrive, hops to `C:` for file I/O, then restores the original location. This code path is skipped entirely on non-Windows.
 - **Elevation:** Windows uses `WindowsPrincipal.IsInRole(Administrator)`. PowerShell 7.4+ on Linux/macOS uses `[Environment]::IsPrivilegedProcess`; older builds fall back to `id -u`.
 
-For the full research with sources, see [docs/CROSS-PLATFORM.md](Cortex-Write-Log/docs/CROSS-PLATFORM.md).
+For the full research with sources, see [docs/CROSS-PLATFORM.md](DivergentCortex.Witness/docs/CROSS-PLATFORM.md).
 
 ## Viewing logs
 

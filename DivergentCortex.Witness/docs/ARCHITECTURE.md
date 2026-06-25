@@ -5,7 +5,7 @@ DivergentCortex.Witness is a PowerShell module that writes CMTrace-compatible st
 ## Module layout
 
 ```
-Cortex-Write-Log/
+DivergentCortex.Witness/
   DivergentCortex.Witness.psd1       Module manifest
   DivergentCortex.Witness.psm1       Module loader
   Public/
