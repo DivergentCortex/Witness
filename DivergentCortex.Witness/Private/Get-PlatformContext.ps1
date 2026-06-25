@@ -1,20 +1,26 @@
-# Private/Get-PlatformContext.ps1
-# Cross-platform identity and execution context adapter.
-# Runs ONCE per session via Initialize-Log; result cached in $script:WitnessContext.
-# Used ONLY for the Initialize-Log banner. Write-Log resolves context= cheaply per line.
-#
-# Fix references:
-#   [3]  Uses $script:WitnessIsWindows - never raw $IsWindows (undefined on PS 5.1).
-#   [4]  Replaces Windows-only Get-ExecutionContextInfo.
-#   [7]  macOS detection: Platform returns 'Windows'/'macOS'/'Linux'.
-#        $IsMacOS guarded with Test-Path Variable:IsMacOS for 5.1-safety.
-#   [8]  Elevation branches Windows/non-Windows first, [Environment]::IsPrivilegedProcess
-#        with id -u fallback. id -u NEVER runs on Windows.
-#   [9]  Interactive-user fallback uses [Environment]::UserName, not $env:USER.
-#   [10] Reuses $identity from the identity block for elevation check on Windows.
-#        No second [WindowsIdentity]::GetCurrent() call.
-
 function Get-PlatformContext {
+    <#
+    .SYNOPSIS
+        Returns a cross-platform identity and execution context object.
+
+    .DESCRIPTION
+        Detects the current platform (Windows/Linux/macOS), process identity,
+        elevation status, interactive user, session type, and hostname. Runs once
+        per session via Initialize-Log; the result is used only for the start
+        banner. Write-Log resolves context= cheaply per line on its own.
+
+        Windows: uses WindowsIdentity for SAM-format identity and admin detection.
+        Linux/macOS: uses .NET Environment APIs with id(1) and loginctl fallbacks.
+
+    .OUTPUTS
+        PSCustomObject with properties: Platform, IdentityName, LogonType,
+        IsSystem, IsAdmin, UserDomainName, UserName, InteractiveUser,
+        SessionType, HostName, ProcessId.
+
+    .EXAMPLE
+        $ctx = Get-PlatformContext
+        Write-Host "Running on $($ctx.Platform) as $($ctx.IdentityName)"
+    #>
     [CmdletBinding()]
     param()
 

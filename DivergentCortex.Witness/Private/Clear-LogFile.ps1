@@ -1,10 +1,23 @@
-# Private/Clear-LogFile.ps1
-# Renamed from donor's Cleanup-LogFiles. Identical behavior, approved PS verb (Clear).
-# Called by Write-Log (auto-cleanup, once per session guard in module scope) and Write-LogFinal.
-#
-# Fix [9] (anti-slop): $ScriptFilter removed. It had zero callers in this module.
-
 function Clear-LogFile {
+    <#
+    .SYNOPSIS
+        Removes log files older than a specified age from a folder.
+
+    .DESCRIPTION
+        Scans the target folder for *.log files whose LastWriteTime is older than
+        MaxAgeDays and deletes them. Called automatically by Write-Log (once per
+        session) and by Write-LogFinal. Both callers share a cleanup sentinel so
+        this never runs twice in a single session.
+
+    .PARAMETER LogFolder
+        Path to the folder containing log files to evaluate.
+
+    .PARAMETER MaxAgeDays
+        Number of days to retain logs. Files older than this are deleted. Default: 7.
+
+    .EXAMPLE
+        Clear-LogFile -LogFolder "C:\Logs" -MaxAgeDays 14
+    #>
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)]
