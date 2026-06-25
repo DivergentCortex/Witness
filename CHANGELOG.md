@@ -1,5 +1,41 @@
 # Changelog
 
+## [2026.06.25.021] - 2026-06-25
+### fix(DivergentCortex.Witness): Debug/Verbose log-level gating defaults corrected from ON to OFF; gating regression tests added
+
+What changed:
+- DivergentCortex.Witness.psm1: flipped all four verbose/debug module-scope defaults from $true to $false ($script:WitnessVerboseConsole, $script:WitnessVerboseLogfile, $script:WitnessDebugConsole, $script:WitnessDebugLogfile)
+- tests/DivergentCortex.Witness.Tests.ps1 Describe 3: 'Verbose maps to type 4' and 'Debug maps to type 5' now set $Global:VerboseLogfile/$Global:DebugLogfile=$true in try/finally before writing, then restore; gate was correct but suppressed the write with proper defaults making the type-code assertions fail
+- tests/DivergentCortex.Witness.Tests.ps1: added Describe 12 'Debug and Verbose level gating matrix' with 9 new It blocks covering defaults-are-off (both surfaces), logfile-ON appears, console/logfile independence (logfile-ON/console-OFF and logfile-OFF/console-ON), and Info-always-passes control; test count grows from 57 to 66
+
+Why:
+- Dogfood run showed Debug and Verbose lines appearing in logs. The gating logic in Write-Log.ps1 was structurally correct (checks $script:WitnessDebugLogfile etc., has early return when both surfaces disabled, has per-surface $shouldWriteConsole/$shouldWriteLogfile checks), but the psm1 module-scope defaults were all $true so the gate never suppressed anything. Operator requirement is default-quiet: debug and verbose must be off unless the operator explicitly enables them. The $Global: back-compat override surface (VerboseConsole, VerboseLogfile, DebugConsole, DebugLogfile) is preserved and tested. No logic changes to Write-Log.ps1 itself.
+
+
+## [2026.06.25.020] - 2026-06-25
+### chore: Remove redundant file-header comment blocks from all function files
+
+What changed:
+- Removed top-of-file comment headers (filename, description, Fix [N] reference lists) from all 6 function files: Clear-LogFile.ps1, Resolve-WitnessLogPath.ps1, Get-PlatformContext.ps1, Write-Log.ps1, Initialize-Log.ps1, Write-LogFinal.ps1
+- Each file now starts directly with function keyword — all documentation lives in the CBH block inside the function body
+- Inline comments within function bodies (explaining WHY specific code patterns exist) are preserved
+
+Why:
+- File-header blocks duplicated information already captured in CBH (added in 2026.06.25.019) and the changelog. Fix reference lists are changelog/git-history concerns, not source-file concerns. Removing them reduces noise and eliminates a maintenance surface that drifts from reality.
+
+
+## [2026.06.25.019] - 2026-06-25
+### docs: Add comment-based help to private functions
+
+What changed:
+- Added <# .SYNOPSIS / .DESCRIPTION / .PARAMETER / .EXAMPLE #> blocks to Clear-LogFile (Private/Clear-LogFile.ps1), Resolve-WitnessLogPath (Private/Resolve-WitnessLogPath.ps1), and Get-PlatformContext (Private/Get-PlatformContext.ps1)
+- Replaced inline parameter comment in Resolve-WitnessLogPath with a proper .PARAMETER block
+- Public functions (Write-Log, Initialize-Log, Write-LogFinal) already had CBH; no changes needed
+
+Why:
+- Operator preference: help documentation should live inside the function body so Get-Help works and the help is co-located with the code. No logic changes.
+
+
 ## [2026.06.25.018] - 2026-06-25
 ### feat(Write-Log): Local time only in CMTrace time= field; test logs move to repo-local logs/ dir
 
