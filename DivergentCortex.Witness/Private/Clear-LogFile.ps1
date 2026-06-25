@@ -19,7 +19,10 @@ function Clear-LogFile {
         Clear-LogFile -LogFolder "C:\Logs" -MaxAgeDays 14
 
     .NOTES
-        Curt & Claude // Divergent Cortex
+        =========================================
+        Curtis Leggett & S.Henry
+        Divergent Cortex
+        =========================================
     #>
     [CmdletBinding()]
     Param(

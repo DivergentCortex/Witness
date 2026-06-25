@@ -22,7 +22,10 @@ function Get-PlatformContext {
         Write-Host "Running on $($ctx.Platform) as $($ctx.IdentityName)"
 
     .NOTES
-        Curt & Claude // Divergent Cortex
+        =========================================
+        Curtis Leggett & S.Henry
+        Divergent Cortex
+        =========================================
     #>
     [CmdletBinding()]
     param()

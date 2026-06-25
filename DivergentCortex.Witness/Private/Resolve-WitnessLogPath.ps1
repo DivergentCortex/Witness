@@ -22,7 +22,10 @@ function Resolve-WitnessLogPath {
         $path = Resolve-WitnessLogPath -CallerResolved $userSuppliedPath
 
     .NOTES
-        Curt & Claude // Divergent Cortex
+        =========================================
+        Curtis Leggett & S.Henry
+        Divergent Cortex
+        =========================================
     #>
     [CmdletBinding()]
     param(
