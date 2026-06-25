@@ -25,7 +25,10 @@ function Initialize-Log {
         Initialize-Log -LogFilePath "C:\Logs\MyScript_20260601.log" -ScriptName "MyScript" -Version "1.0"
 
     .NOTES
-        Curt & Claude // Divergent Cortex
+        =========================================
+        Curtis Leggett & S.Henry
+        Divergent Cortex
+        =========================================
     #>
     [CmdletBinding()]
     Param (

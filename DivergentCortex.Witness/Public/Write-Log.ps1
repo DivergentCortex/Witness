@@ -53,7 +53,10 @@ function Write-Log {
         }
 
     .NOTES
-        Curt & Claude // Divergent Cortex
+        =========================================
+        Curtis Leggett & S.Henry
+        Divergent Cortex
+        =========================================
     #>
     [CmdletBinding()]
     Param (

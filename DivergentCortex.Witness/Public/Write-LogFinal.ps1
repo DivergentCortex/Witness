@@ -25,7 +25,10 @@ function Write-LogFinal {
         Write-LogFinal -Message "Script completed." -Severity Success
 
     .NOTES
-        Curt & Claude // Divergent Cortex
+        =========================================
+        Curtis Leggett & S.Henry
+        Divergent Cortex
+        =========================================
     #>
     [CmdletBinding()]
     Param(
