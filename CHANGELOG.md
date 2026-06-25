@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026.06.25.022] - 2026-06-25
+### docs: Add .NOTES signature block to all function CBH
+
+What changed:
+- Added .NOTES block with 'Curt & Claude // Divergent Cortex' to CBH in all 6 function files: Clear-LogFile.ps1, Resolve-WitnessLogPath.ps1, Get-PlatformContext.ps1, Write-Log.ps1, Initialize-Log.ps1, Write-LogFinal.ps1
+- Removed old donor .NOTES box from Clear-LogFile.ps1 (contained rot-prone fields: Created on, Filename, Version)
+
+Why:
+- Operator preference: signature should reflect the human-AI collaboration (Curt & Claude) with the org. No filename, version, or date fields - those are git's job and rot in source.
+
+
 ## [2026.06.25.021] - 2026-06-25
 ### fix(DivergentCortex.Witness): Debug/Verbose log-level gating defaults corrected from ON to OFF; gating regression tests added
 
