@@ -53,7 +53,7 @@ function Initialize-Log {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    11/08/2022 9:30 AM                              -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2022 Synapse Co.                                -
+        -  Copyright:     2022 Divergent Cortex                           -
         =  Organization:  Divergent Cortex                                -
         -  Version:       2024.01.15.004                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=

@@ -28,7 +28,7 @@ function Clear-LogFile {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    7/11/2023 10:45 AM                              -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2023 Synapse Co.                                -
+        -  Copyright:     2023 Divergent Cortex                           -
         =  Organization:  Divergent Cortex                                -
         -  Version:       2025.02.08.006                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
