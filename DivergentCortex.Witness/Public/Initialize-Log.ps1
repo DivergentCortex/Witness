@@ -75,8 +75,6 @@ function Initialize-Log {
         [string]$Version
     )
 
-    # Layer 1: explicit param wins; layer 2: caller-scope for dot-source back-compat.
-    # Layers 3+ delegated to Resolve-WitnessLogPath.
     $callerCandidate = $null
     if ($PSBoundParameters.ContainsKey('LogFilePath') -and -not [string]::IsNullOrWhiteSpace($LogFilePath)) {
         $callerCandidate = $LogFilePath
@@ -95,11 +93,9 @@ function Initialize-Log {
 
     $script:WitnessLogFilePath = $LogFilePath
 
-    # Each Initialize-Log call represents a new session context -- reset sentinel so
-    # the new log directory gets exactly one cleanup pass.
+    # new session, reset cleanup sentinel
     $script:WitnessCleanupRan = $false
 
-    # Auto-detect script name from the call stack when not supplied.
     if ([string]::IsNullOrWhiteSpace($ScriptName)) {
         try {
             $callStack = Get-PSCallStack
@@ -115,16 +111,12 @@ function Initialize-Log {
 
     $ctx = Get-PlatformContext
 
-    # Ensure the log directory exists before writing the banner.
     $logDir = Split-Path $LogFilePath
     if ($logDir -and !(Test-Path $logDir)) {
         New-Item -Path $logDir -ItemType Directory -Force | Out-Null
     }
 
-    # Build banner lines as CMTrace entries. These are written directly to the file
-    # rather than through Write-Log so they always appear regardless of the
-    # Verbose/Debug gate settings. The banner is session context, not a diagnostic
-    # message -- it must always be recorded.
+    # bypass Write-Log so banner always appears regardless of gate settings
     $now = Get-Date
     $LogDate = $now.ToString('MM-dd-yyyy')
     $LogTime = $now.ToString('HH:mm:ss.fff')
@@ -136,7 +128,6 @@ function Initialize-Log {
         $contextUser = "$([System.Environment]::UserDomainName)\$([System.Environment]::UserName)"
     }
 
-    # type=1 (Info) so CMTrace renders banner lines in the normal color.
     $bannerLines = @(
         "===============================================================================",
         "SCRIPT START: $ScriptName",

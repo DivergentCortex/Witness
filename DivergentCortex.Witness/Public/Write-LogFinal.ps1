@@ -1,5 +1,4 @@
-# PSScriptAnalyzer suppressions:
-# PSAvoidGlobalVars: $Global:WriteLogMaxAgeDays is a documented back-compat surface.
+# PSAvoidGlobalVars suppressed, documented back-compat surface
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
 param()
 
@@ -68,12 +67,11 @@ function Write-LogFinal {
 
     Write-Log -Message $Message -Severity $Severity
 
-    # Write-Log may have already run cleanup this session -- sentinel blocks the second pass.
+    # dont run cleanup twice
     if ($script:WitnessCleanupRan) {
         return
     }
 
-    # Same module-scope / global-override chain Write-Log uses so both paths agree on retention.
     $maxAgeDays = $script:WitnessMaxAgeDays
     if (Test-Path Variable:Global:WriteLogMaxAgeDays) { $maxAgeDays = $Global:WriteLogMaxAgeDays }
 
@@ -93,8 +91,7 @@ function Write-LogFinal {
         return
     }
 
-    # Set sentinel before calling Clear-LogFile because Clear-LogFile calls Write-Log,
-    # which checks the sentinel to prevent recursive cleanup.
+    # sentinel before call prevents recursion
     $script:WitnessCleanupRan = $true
     try {
         Clear-LogFile -LogFolder $logFolder -MaxAgeDays $maxAgeDays
