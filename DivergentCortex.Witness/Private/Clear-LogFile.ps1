@@ -32,7 +32,7 @@ function Clear-LogFile {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string]$LogFolder,
 
@@ -48,7 +48,7 @@ function Clear-LogFile {
         return
     }
 
-    $cutoff  = (Get-Date).AddDays(-$MaxAgeDays)
+    $cutoff = (Get-Date).AddDays(-$MaxAgeDays)
     $expired = $logFiles | Where-Object { $_.LastWriteTime -lt $cutoff }
 
     if (-not $expired -or @($expired).Count -eq 0) {
@@ -61,7 +61,8 @@ function Clear-LogFile {
         try {
             Remove-Item -Path $file.FullName -Force -ErrorAction Stop
             Write-Log "Deleted: $($file.Name)" -Severity Verbose
-        } catch {
+        }
+        catch {
             Write-Log "Failed to delete '$($file.Name)': $($_.Exception.Message)" -Severity Warning
         }
     }
