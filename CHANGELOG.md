@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026.06.25.029] - 2026-06-25
+### refactor(DivergentCortex.Witness): Strip inline comment slop across all module functions
+
+What changed:
+- Removed double dashes, semicolons, colons, and periods from all inline comments per doctrine
+- Deleted unnecessary comments that narrate obvious code (layer comments, section headers, what-not-why)
+- Rewrote remaining load-bearing comments to lowercase terse voice, 3-8 words
+- Removed 4 Write-Verbose calls from Get-PlatformContext.ps1 (banned cmdlet violation)
+- Shortened PSScriptAnalyzer suppression comments to one-liners without colons
+- Files: Write-Log.ps1, Get-PlatformContext.ps1, Initialize-Log.ps1, Write-LogFinal.ps1
+
+Why:
+- Operator review found the PS specialist left double dashes, semicolons, colons, formal voice, and too many comments. Double dashes are em dashes and are banned. Comments should only exist at load-bearing code for experienced readers.
+
+
 ## [2026.06.25.028] - 2026-06-25
 ### fix(DivergentCortex.Witness): PS-standards pass: comment-based help, PSScriptAnalyzer clean, banner always-write fix
 
