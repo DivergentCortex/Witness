@@ -972,3 +972,187 @@ Describe 'Debug and Verbose level gating matrix' {
         $content | Should -Match 'info-always-present'
     }
 }
+
+
+# ============================================================
+# DESCRIBE 9 - Native PowerShell debug/verbose preference gate
+# ============================================================
+# These tests lock in the behavior added in 2026-06: Write-Log must honor
+# the standard PowerShell preference variables ($DebugPreference,
+# $VerbosePreference) as the master "on" switch for debug/verbose output,
+# so consumers who run their scripts or functions with -Debug or -Verbose
+# get Write-Log output automatically, with no custom flags required.
+#
+# Test (a) - CASCADE: a parent advanced function invoked with -Debug/-Verbose
+#   causes Write-Log to emit to the log file. This is the primary behavior.
+#
+# Test (b) - PREFERENCE IN SCOPE: setting $DebugPreference / $VerbosePreference
+#   directly to 'Continue' in the calling scope causes output.
+#
+# Test (c) - DEFAULT QUIET: with no preference set and no $Global flags,
+#   Debug and Verbose produce nothing.
+#
+# Test (d) - BACK-COMPAT: $Global:DebugConsole/$Global:DebugLogfile still work.
+#
+# PS 5.1-safe: no ternary operators, no ?? syntax. ASCII only.
+Describe 'Native debug/verbose preference gate' {
+
+    BeforeEach {
+        # Clear all global override flags before every test so tests are isolated.
+        if (Test-Path Variable:Global:DebugConsole)   { Remove-Variable -Name DebugConsole   -Scope Global -ErrorAction SilentlyContinue }
+        if (Test-Path Variable:Global:DebugLogfile)   { Remove-Variable -Name DebugLogfile   -Scope Global -ErrorAction SilentlyContinue }
+        if (Test-Path Variable:Global:VerboseConsole) { Remove-Variable -Name VerboseConsole -Scope Global -ErrorAction SilentlyContinue }
+        if (Test-Path Variable:Global:VerboseLogfile) { Remove-Variable -Name VerboseLogfile -Scope Global -ErrorAction SilentlyContinue }
+    }
+
+    AfterEach {
+        # Restore preference variables to their silent defaults after each test.
+        $DebugPreference   = 'SilentlyContinue'
+        $VerbosePreference = 'SilentlyContinue'
+        if (Test-Path Variable:Global:DebugConsole)   { Remove-Variable -Name DebugConsole   -Scope Global -ErrorAction SilentlyContinue }
+        if (Test-Path Variable:Global:DebugLogfile)   { Remove-Variable -Name DebugLogfile   -Scope Global -ErrorAction SilentlyContinue }
+        if (Test-Path Variable:Global:VerboseConsole) { Remove-Variable -Name VerboseConsole -Scope Global -ErrorAction SilentlyContinue }
+        if (Test-Path Variable:Global:VerboseLogfile) { Remove-Variable -Name VerboseLogfile -Scope Global -ErrorAction SilentlyContinue }
+    }
+
+    # ------------------------------------------------------------------
+    # (a) CASCADE: parent advanced function with -Debug propagates into Write-Log
+    # ------------------------------------------------------------------
+    # PowerShell preference variables propagate down the call stack through advanced
+    # functions. When a parent advanced function is invoked with -Debug, PowerShell
+    # sets $DebugPreference = 'Continue' for that call frame. Because Write-Log is
+    # also an advanced function ([CmdletBinding()]) that reads $DebugPreference, it
+    # sees the propagated value and emits the debug entry.
+    #
+    # The parent function must be declared with [CmdletBinding()] - this is what
+    # makes PowerShell propagate preference variables into its scope. A plain
+    # function does NOT propagate them.
+
+    It '(a) cascade: parent advanced function called with -Debug causes Write-Log Debug to emit to log' {
+        $logPath = & $script:NewTestLogPath -Suffix '_cascade_debug'
+
+        # Declare a parent advanced function that calls Write-Log.
+        # [CmdletBinding()] is required for preference propagation.
+        function Invoke-CascadeDebugTest {
+            [CmdletBinding()]
+            param([string]$LogPath)
+            Initialize-Log -LogFilePath $LogPath -ScriptName 'CascadeTest' -Version '0.0'
+            Write-Log -Message 'cascade-debug-message' -Logfile $LogPath -Severity Debug -WriteBackToHost:$false
+        }
+
+        # Invoke with -Debug. PowerShell sets $DebugPreference = 'Continue' for this
+        # call frame and all advanced functions called from it, including Write-Log.
+        Invoke-CascadeDebugTest -LogPath $logPath -Debug
+
+        $content = Get-Content -Path $logPath -Raw
+        $content | Should -Match 'cascade-debug-message' -Because 'parent -Debug flag must propagate $DebugPreference into Write-Log so the debug entry is emitted'
+    }
+
+    It '(a) cascade: parent advanced function called with -Verbose causes Write-Log Verbose to emit to log' {
+        $logPath = & $script:NewTestLogPath -Suffix '_cascade_verbose'
+
+        function Invoke-CascadeVerboseTest {
+            [CmdletBinding()]
+            param([string]$LogPath)
+            Initialize-Log -LogFilePath $LogPath -ScriptName 'CascadeTest' -Version '0.0'
+            Write-Log -Message 'cascade-verbose-message' -Logfile $LogPath -Severity Verbose -WriteBackToHost:$false
+        }
+
+        Invoke-CascadeVerboseTest -LogPath $logPath -Verbose
+
+        $content = Get-Content -Path $logPath -Raw
+        $content | Should -Match 'cascade-verbose-message' -Because 'parent -Verbose flag must propagate $VerbosePreference into Write-Log so the verbose entry is emitted'
+    }
+
+    # ------------------------------------------------------------------
+    # (b) PREFERENCE IN SCOPE: direct $DebugPreference / $VerbosePreference assignment
+    # ------------------------------------------------------------------
+
+    It '(b) $DebugPreference = Continue in scope causes Write-Log Debug to emit to log' {
+        $logPath = & $script:NewTestLogPath -Suffix '_pref_debug'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'PrefTest' -Version '0.0'
+
+        $DebugPreference = 'Continue'
+        Write-Log -Message 'pref-debug-message' -Logfile $logPath -Severity Debug -WriteBackToHost:$false
+
+        $content = Get-Content -Path $logPath -Raw
+        $content | Should -Match 'pref-debug-message' -Because '$DebugPreference = Continue must enable the debug gate in Write-Log'
+    }
+
+    It '(b) $VerbosePreference = Continue in scope causes Write-Log Verbose to emit to log' {
+        $logPath = & $script:NewTestLogPath -Suffix '_pref_verbose'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'PrefTest' -Version '0.0'
+
+        $VerbosePreference = 'Continue'
+        Write-Log -Message 'pref-verbose-message' -Logfile $logPath -Severity Verbose -WriteBackToHost:$false
+
+        $content = Get-Content -Path $logPath -Raw
+        $content | Should -Match 'pref-verbose-message' -Because '$VerbosePreference = Continue must enable the verbose gate in Write-Log'
+    }
+
+    # ------------------------------------------------------------------
+    # (c) DEFAULT QUIET: no preference set, no global flags -> nothing emitted
+    # ------------------------------------------------------------------
+
+    It '(c) default quiet: Write-Log Debug with no preference and no global flags emits nothing to log' {
+        $logPath = & $script:NewTestLogPath -Suffix '_quiet_debug'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'QuietTest' -Version '0.0'
+        $bannerSize = (Get-Item $logPath).Length
+
+        # $DebugPreference is 'SilentlyContinue' by default; no $Global:DebugLogfile set.
+        Write-Log -Message 'quiet-debug-should-not-appear' -Logfile $logPath -Severity Debug -WriteBackToHost:$false
+
+        $afterSize = (Get-Item $logPath).Length
+        $afterSize | Should -Be $bannerSize -Because 'Debug with SilentlyContinue preference and no global flags must produce no log file output'
+    }
+
+    It '(c) default quiet: Write-Log Verbose with no preference and no global flags emits nothing to log' {
+        $logPath = & $script:NewTestLogPath -Suffix '_quiet_verbose'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'QuietTest' -Version '0.0'
+        $bannerSize = (Get-Item $logPath).Length
+
+        Write-Log -Message 'quiet-verbose-should-not-appear' -Logfile $logPath -Severity Verbose -WriteBackToHost:$false
+
+        $afterSize = (Get-Item $logPath).Length
+        $afterSize | Should -Be $bannerSize -Because 'Verbose with SilentlyContinue preference and no global flags must produce no log file output'
+    }
+
+    # ------------------------------------------------------------------
+    # (d) BACK-COMPAT: $Global:DebugLogfile / $Global:DebugConsole still work
+    # ------------------------------------------------------------------
+
+    It '(d) back-compat: $Global:DebugLogfile = $true writes Debug to log even with no preference set' {
+        $logPath = & $script:NewTestLogPath -Suffix '_compat_debug_logfile'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'CompatTest' -Version '0.0'
+
+        $Global:DebugLogfile = $true
+        Write-Log -Message 'compat-debug-logfile-message' -Logfile $logPath -Severity Debug -WriteBackToHost:$false
+
+        $content = Get-Content -Path $logPath -Raw
+        $content | Should -Match 'compat-debug-logfile-message' -Because '$Global:DebugLogfile = $true must enable the logfile surface for debug messages'
+    }
+
+    It '(d) back-compat: $Global:VerboseLogfile = $true writes Verbose to log even with no preference set' {
+        $logPath = & $script:NewTestLogPath -Suffix '_compat_verbose_logfile'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'CompatTest' -Version '0.0'
+
+        $Global:VerboseLogfile = $true
+        Write-Log -Message 'compat-verbose-logfile-message' -Logfile $logPath -Severity Verbose -WriteBackToHost:$false
+
+        $content = Get-Content -Path $logPath -Raw
+        $content | Should -Match 'compat-verbose-logfile-message' -Because '$Global:VerboseLogfile = $true must enable the logfile surface for verbose messages'
+    }
+
+    It '(d) back-compat: $Global:DebugConsole = $true alone does not write to log (per-surface control)' {
+        $logPath = & $script:NewTestLogPath -Suffix '_compat_debug_console_only'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'CompatTest' -Version '0.0'
+        $bannerSize = (Get-Item $logPath).Length
+
+        $Global:DebugConsole = $true
+        # DebugLogfile is NOT set; WriteBackToHost:$false suppresses console output in test.
+        Write-Log -Message 'compat-debug-console-only' -Logfile $logPath -Severity Debug -WriteBackToHost:$false
+
+        $afterSize = (Get-Item $logPath).Length
+        $afterSize | Should -Be $bannerSize -Because '$Global:DebugConsole without $Global:DebugLogfile must not write to the log file'
+    }
+}
