@@ -132,15 +132,15 @@ The three sources are evaluated independently per surface (console and log file)
 
 These module-scope defaults can be overridden with global variables before or after import:
 
-| Global variable               | Default | Effect                                              |
-| ----------------------------- | ------- | --------------------------------------------------- |
-| `$Global:WriteLogMaxSizeMB`   | 10      | Rotate the log file when it exceeds this size in MB |
-| `$Global:WriteLogMaxAgeDays`  | 7       | Delete log files older than this many days          |
-| `$Global:WriteLogAutoCleanup` | $true   | Run age-based cleanup once per session              |
-| `$Global:VerboseConsole`      | $false  | Show Verbose entries in the console (back-compat override) |
+| Global variable               | Default | Effect                                                       |
+| ----------------------------- | ------- | ------------------------------------------------------------ |
+| `$Global:WriteLogMaxSizeMB`   | 10      | Rotate the log file when it exceeds this size in MB          |
+| `$Global:WriteLogMaxAgeDays`  | 7       | Delete log files older than this many days                   |
+| `$Global:WriteLogAutoCleanup` | $true   | Run age-based cleanup once per session                       |
+| `$Global:VerboseConsole`      | $false  | Show Verbose entries in the console (back-compat override)   |
 | `$Global:VerboseLogfile`      | $false  | Write Verbose entries to the log file (back-compat override) |
-| `$Global:DebugConsole`        | $false  | Show Debug entries in the console (back-compat override) |
-| `$Global:DebugLogfile`        | $false  | Write Debug entries to the log file (back-compat override) |
+| `$Global:DebugConsole`        | $false  | Show Debug entries in the console (back-compat override)     |
+| `$Global:DebugLogfile`        | $false  | Write Debug entries to the log file (back-compat override)   |
 
 ## Cross-platform notes
 
