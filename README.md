@@ -8,12 +8,12 @@ Three exported functions. Zero breaking changes from the original. Drop it into 
 
 ## Platform support
 
-| Runtime | OS | Status |
-|---|---|---|
-| Windows PowerShell 5.1 | Windows | Full support (original target) |
-| PowerShell 7.4+ | Windows | Full support |
-| PowerShell 7.4+ | Linux | Full support (see cross-platform notes) |
-| PowerShell 7.4+ | macOS | Full support (see cross-platform notes) |
+| Runtime                | OS      | Status                                  |
+| ---------------------- | ------- | --------------------------------------- |
+| Windows PowerShell 5.1 | Windows | Full support (original target)          |
+| PowerShell 7.4+        | Windows | Full support                            |
+| PowerShell 7.4+        | Linux   | Full support (see cross-platform notes) |
+| PowerShell 7.4+        | macOS   | Full support (see cross-platform notes) |
 
 ## Install
 
@@ -52,27 +52,27 @@ Every call writes a CMTrace-formatted line to the log file and prints a color-co
 
 ## Severity levels
 
-| Severity | Aliases | CMTrace type code | Console color |
-|---|---|---|---|
-| Info | Information | 1 | White |
-| Success | | 1 | Green |
-| Warning | | 2 | Yellow |
-| Error | | 3 | Red |
-| Verbose | | 4 | Dark gray |
-| Debug | | 5 | Magenta |
+| Severity | Aliases     | CMTrace type code | Console color |
+| -------- | ----------- | ----------------- | ------------- |
+| Info     | Information | 1                 | White         |
+| Success  |             | 1                 | Green         |
+| Warning  |             | 2                 | Yellow        |
+| Error    |             | 3                 | Red           |
+| Verbose  |             | 4                 | Dark gray     |
+| Debug    |             | 5                 | Magenta       |
 
 ## Write-Log parameters
 
-| Parameter | Type | Required | Default | Description |
-|---|---|---|---|---|
-| Message | string | Yes | | The message to log. Accepts pipeline input. |
-| Logfile | string | No | (resolved) | Path to the log file. Falls back through the resolution chain described below. |
-| Severity | string | No | Info | Log level. ValidateSet: Info, Information, Warning, Error, Verbose, Debug, Success. |
-| Component | string | No | (auto) | Override the auto-detected component name from the call stack. |
-| WriteBackToHost | switch | No | $true | Write formatted output to the console alongside the log file. |
-| MaxRetries | int | No | 3 | Retry attempts when the file is locked by another process. |
-| RetryDelay | double | No | 0.5 | Seconds between retry attempts. |
-| Color | ConsoleColor | No | (severity) | Override the console color for this message. |
+| Parameter       | Type         | Required | Default    | Description                                                                         |
+| --------------- | ------------ | -------- | ---------- | ----------------------------------------------------------------------------------- |
+| Message         | string       | Yes      |            | The message to log. Accepts pipeline input.                                         |
+| Logfile         | string       | No       | (resolved) | Path to the log file. Falls back through the resolution chain described below.      |
+| Severity        | string       | No       | Info       | Log level. ValidateSet: Info, Information, Warning, Error, Verbose, Debug, Success. |
+| Component       | string       | No       | (auto)     | Override the auto-detected component name from the call stack.                      |
+| WriteBackToHost | switch       | No       | $true      | Write formatted output to the console alongside the log file.                       |
+| MaxRetries      | int          | No       | 3          | Retry attempts when the file is locked by another process.                          |
+| RetryDelay      | double       | No       | 0.5        | Seconds between retry attempts.                                                     |
+| Color           | ConsoleColor | No       | (severity) | Override the console color for this message.                                        |
 
 **Aliases for Severity:** The `-Severity` parameter also responds to `-LogLevel`, `-Type`, and `-level`.
 
@@ -101,15 +101,15 @@ For details on module internals, see [docs/ARCHITECTURE.md](DivergentCortex.Witn
 
 These module-scope defaults can be overridden with global variables before or after import:
 
-| Global variable | Default | Effect |
-|---|---|---|
-| `$Global:WriteLogMaxSizeMB` | 10 | Rotate the log file when it exceeds this size in MB |
-| `$Global:WriteLogMaxAgeDays` | 7 | Delete log files older than this many days |
-| `$Global:WriteLogAutoCleanup` | $true | Run age-based cleanup once per session |
-| `$Global:VerboseConsole` | $true | Show Verbose entries in the console |
-| `$Global:VerboseLogfile` | $true | Write Verbose entries to the log file |
-| `$Global:DebugConsole` | $true | Show Debug entries in the console |
-| `$Global:DebugLogfile` | $true | Write Debug entries to the log file |
+| Global variable               | Default | Effect                                              |
+| ----------------------------- | ------- | --------------------------------------------------- |
+| `$Global:WriteLogMaxSizeMB`   | 10      | Rotate the log file when it exceeds this size in MB |
+| `$Global:WriteLogMaxAgeDays`  | 7       | Delete log files older than this many days          |
+| `$Global:WriteLogAutoCleanup` | $true   | Run age-based cleanup once per session              |
+| `$Global:VerboseConsole`      | $true   | Show Verbose entries in the console                 |
+| `$Global:VerboseLogfile`      | $true   | Write Verbose entries to the log file               |
+| `$Global:DebugConsole`        | $true   | Show Debug entries in the console                   |
+| `$Global:DebugLogfile`        | $true   | Write Debug entries to the log file                 |
 
 ## Cross-platform notes
 
