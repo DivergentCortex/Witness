@@ -30,11 +30,11 @@ function Resolve-WitnessLogPath {
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    6/18/2026 11:15 AM                              -
+        -  Created on:    04/23/2023                                      -
         =  Author:        Curtis Leggett                                  =
         -  Copyright:     2026 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                -
-        -  Version:       2026.06.18.001                                  -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
         =                      yet, somewhere,                            =

@@ -12,7 +12,7 @@
     ModuleVersion        = '1.0.1'
     GUID                 = 'b4e2f1c3-8d47-4a9e-b5f0-3c6a1e2d8b9f'
     Author               = 'Curtis Leggett'
-    CompanyName          = 'DivergentCortex'
+    CompanyName          = 'Divergent Cortex'
     Copyright            = '(c) 2026 Divergent Cortex. All rights reserved.'
     Description          = 'There is always a Witness. CMTrace-compatible structured logger for PowerShell. Cross-platform (Windows/Linux/macOS), supports PS 5.1 and PS 7.4+.'
 

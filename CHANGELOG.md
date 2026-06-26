@@ -1,5 +1,23 @@
 # Changelog
 
+## [2026.06.26.032] - 2026-06-26
+### chore(DivergentCortex.Witness): Add operator identity signature block to all module files
+
+What changed:
+- Replaced .NOTES signature in Public/Write-Log.ps1 with canonical operator template (date 04/23/2023, version 1.0.1, copyright 2026 Divergent Cortex)
+- Replaced .NOTES signature in Public/Initialize-Log.ps1 with canonical operator template
+- Replaced .NOTES signature in Public/Write-LogFinal.ps1 with canonical operator template
+- Replaced .NOTES signature in Private/Clear-LogFile.ps1 with canonical operator template
+- Replaced .NOTES signature in Private/Get-PlatformContext.ps1 with canonical operator template
+- Replaced .NOTES signature in Private/Resolve-WitnessLogPath.ps1 with canonical operator template
+- Added signature header comment block at top of DivergentCortex.Witness.psm1 (before all code)
+- Fixed DivergentCortex.Witness.psd1 CompanyName from 'DivergentCortex' to 'Divergent Cortex' to match signature and operator identity
+- Pester suite confirmed green at 78/78 after all changes
+
+Why:
+- Operator supplied exact personal identity signature block (alternating =/- ASCII border art, date 04/23/2023, version 1.0.1, copyright 2026 Divergent Cortex) to be reproduced faithfully across all six functions and the module loader. This is the operator's personal mark and must be consistent across every function's .NOTES and the psm1 header. Manifest CompanyName corrected to match the signature's 'Divergent Cortex' spacing.
+
+
 ## [2026.06.26.031] - 2026-06-26
 ### fix(DivergentCortex.Witness): Consolidated 12-item pre-public review fix pass (Codex, Huginn, Muninn)
 
