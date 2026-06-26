@@ -14,7 +14,7 @@
     Author               = 'Curtis Leggett'
     CompanyName          = 'Divergent Cortex'
     Copyright            = '(c) 2026 Divergent Cortex. All rights reserved.'
-    Description          = 'There is always a Witness. CMTrace-compatible structured logger for PowerShell. Cross-platform (Windows/Linux/macOS), supports PS 5.1 and PS 7.4+.'
+    Description          = 'The logging backbone of an entire PowerShell fleet - a hardened, cross-platform, CMTrace-compatible logging module for Windows PowerShell 5.1 and PowerShell 7.'
 
     # Minimum supported version of PowerShell
     PowerShellVersion    = '5.1'
