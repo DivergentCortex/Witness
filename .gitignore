@@ -2,6 +2,9 @@
 logs/
 *.log
 
+# Example script runtime output (contains real hostnames)
+DivergentCortex.Witness/examples/logs/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

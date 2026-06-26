@@ -1,10 +1,43 @@
+<!-- logo banner goes here once finalized -->
+
 # DivergentCortex.Witness
 
-**There is always a Witness.**
+*the observer of the unsaid, the truth within the artifacts*
 
-A hardened, cross-platform, CMTrace-compatible logging module for PowerShell. The core logger was originally written in April 2023 and spent three years in daily production use across SCCM deployments, scheduled tasks, and remote automation before being rebuilt as a proper module that runs everywhere PowerShell does.
+[![CI](https://github.com/DivergentCortex/Witness/actions/workflows/test.yml/badge.svg)](https://github.com/DivergentCortex/Witness/actions/workflows/test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey) ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207.4%2B-blue)
 
-Three exported functions. Zero breaking changes from the original. Drop it into an existing script and it works the same way it always did, except now it also runs on Linux and macOS.
+---
+
+Something breaks at 2am. Most scripts tell you "an error occurred." Witness tells you the script, the function, and the exact line number it died on, automatically, because it reads the call stack itself. You tag nothing.
+
+You wire the log calls into your script where things happen, and Witness turns them into something you can actually use:
+
+- Color-coded console output, live. Severity at a glance, success green, warning yellow, error red. You watch what is happening as it runs instead of squinting at a wall of white text.
+- Every line knows where it came from, the function and line that wrote it, stamped in automatically.
+- When it fails, it points at the exact spot. That is the difference between debugging for an hour and fixing it in a minute.
+
+It also writes a permanent CMTrace-compatible record to disk for the audit trail and the CMTrace viewer, but the thing you feel every day is the console. That is the visibility.
+
+This is the logging backbone of an entire PowerShell fleet, hundreds of scripts, every server, for years, from SCCM deployments to database jobs to reboot prompts to security tooling. Built because every other PowerShell logger out there does nothing worth using. If you have gone looking for a good one, you already know.
+
+## See it work
+
+A quick run of examples/Example-Usage.ps1:
+
+```
+[ INFO    ] [Test-Wareh..] [125]: Endpoint reachable. Latency: 38ms.
+[ WARNING ] [Get-Widget..] [64]: SKU WGT-200 is out of stock in 'WH-01'.
+[ SUCCESS ] [Get-Widget..] [74]: Inventory read complete. 3 SKUs returned.
+[ ERROR   ] [Invoke-Wid..] [103]: Reorder failed for SKU=WGT-200. Detail: item discontinued.
+```
+
+That error did not come with a tag. Witness read the call stack and recorded exactly where it happened, in the log file:
+
+```
+component="Invoke-WidgetReorder"  file="Example-Usage.ps1: line 103"  type="3"
+```
+
+Function and line number, automatically. That is the difference.
 
 ## Platform support
 
@@ -89,7 +122,7 @@ If none of these resolve, Write-Log throws. The safest pattern under `Import-Mod
 
 ## How it works
 
-The module's internal structure follows a one-file-per-function layout with a platform adapter that keeps OS-specific logic out of the public functions.
+Built modular for easy maintenance, easy additions, and a readable structure.
 
 **Get-PlatformContext** (private) is the cross-platform adapter. It runs once during `Initialize-Log` to collect identity, elevation status, hostname, interactive user, session type, and platform string. Each field branches internally on `$script:WitnessIsWindows` (a 5.1-safe platform probe set at module load), so the public functions never branch on OS themselves.
 
