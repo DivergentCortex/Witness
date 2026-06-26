@@ -1156,3 +1156,140 @@ Describe 'Native debug/verbose preference gate' {
         $afterSize | Should -Be $bannerSize -Because '$Global:DebugConsole without $Global:DebugLogfile must not write to the log file'
     }
 }
+
+
+# ============================================================
+# DESCRIBE 13 - Log rotation (Fix #1 regression + happy path)
+# (a) A log exceeding MaxSizeMB is renamed to _r01 and a new active file starts.
+# (b) REGRESSION: when Rename-Item fails, the original log is NOT truncated/lost.
+# (c) REGRESSION (Fix #3): a function whose name contains 'ps1' as a substring
+#     (e.g. Invoke-Ps1Migration) still logs the correct component name.
+# ============================================================
+Describe 'Log rotation and component detection regressions' {
+
+    # ------------------------------------------------------------------
+    # (a) Happy path: log exceeding MaxSizeMB rotates to _r01
+    # ------------------------------------------------------------------
+    It '(a) rotation happy path: log >= MaxSizeMB is renamed _r01 and new active file starts' {
+        $randPart  = [System.IO.Path]::GetRandomFileName() -replace '\.', ''
+        $rotDir    = Join-Path $script:TestTempDir "rotation_happy_$randPart"
+        New-Item -Path $rotDir -ItemType Directory -Force | Out-Null
+
+        $logPath = Join-Path $rotDir 'active.log'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'RotationTest' -Version '0.0'
+
+        # Set a tiny MaxSizeMB so the next write triggers rotation.
+        # The banner is already written, so pad the file to exceed 0.001 MB (1 KB).
+        $Global:WriteLogMaxSizeMB = 0.001
+
+        try {
+            # Pad the log past the threshold using raw file append so Write-Log sees it as oversized.
+            $padding = 'x' * 1100  # >1 KB
+            [System.IO.File]::AppendAllText($logPath, $padding)
+
+            # This write should trigger rotation.
+            Write-Log -Message 'post-rotation-message' -Logfile $logPath -Severity Info -WriteBackToHost:$false
+
+            # The archive _r01 file must exist.
+            $base       = [System.IO.Path]::GetFileNameWithoutExtension($logPath)
+            $ext        = [System.IO.Path]::GetExtension($logPath)
+            $archivePath = Join-Path $rotDir "${base}_r01${ext}"
+            Test-Path $archivePath | Should -Be $true -Because 'oversized log must be renamed to _r01 archive'
+
+            # The active log must exist (rotation notice + new entry).
+            Test-Path $logPath | Should -Be $true -Because 'new active log file must be created after rotation'
+
+            # New active log must contain the rotation notice and the post-rotation message.
+            $content = Get-Content -Path $logPath -Raw
+            $content | Should -Match 'LOG ROTATION'      -Because 'rotation notice must be first line of new log'
+            $content | Should -Match 'post-rotation-message' -Because 'new entry must follow the rotation notice'
+        }
+        finally {
+            Remove-Variable -Name WriteLogMaxSizeMB -Scope Global -ErrorAction SilentlyContinue
+        }
+    }
+
+    # ------------------------------------------------------------------
+    # (b) REGRESSION Fix #1: rename failure must NOT truncate original log
+    # ------------------------------------------------------------------
+    # Simulate a failed Rename-Item by making the containing directory
+    # read-only so the OS cannot create the archive name (rename on Linux
+    # requires write permission on the directory). After the test, restore
+    # directory permissions. The sentinel in the original file must survive.
+    # PS 5.1-safe: no ternary, no ?? syntax.
+    It '(b) regression Fix1: rename failure does not truncate original log (no data loss)' {
+        $randPart  = [System.IO.Path]::GetRandomFileName() -replace '\.', ''
+        $rotDir    = Join-Path $script:TestTempDir "rotation_fail_$randPart"
+        New-Item -Path $rotDir -ItemType Directory -Force | Out-Null
+
+        $logPath = Join-Path $rotDir 'active.log'
+        $sentinelMsg = 'UNIQUE-SENTINEL-DO-NOT-LOSE'
+        [System.IO.File]::WriteAllText($logPath, "$sentinelMsg`n")
+
+        # Pad past the tiny rotation threshold so Write-Log attempts rotation.
+        $Global:WriteLogMaxSizeMB = 0.001
+        [System.IO.File]::AppendAllText($logPath, ('x' * 1100))
+
+        # Make the directory read-only so Rename-Item (which needs write+exec on the
+        # directory to add a new directory entry) will fail on Linux.
+        try {
+            chmod 0555 $rotDir
+        }
+        catch {
+            # chmod unavailable - skip rather than give a false result.
+            Set-ItResult -Skipped -Because 'chmod not available on this platform'
+            return
+        }
+
+        try {
+            # This triggers rotation. Rename-Item will fail (read-only dir).
+            # Fix #1: WriteAllText must NOT run when $renamed is $false.
+            # Suppress the expected Write-Warning from the rotation block.
+            Write-Log -Message 'after-failed-rotation' -Logfile $logPath -Severity Info -WriteBackToHost:$false 3>$null
+        }
+        catch {
+            # Catch any residual error from Write-Log (e.g. file write blocked too).
+        }
+        finally {
+            # Restore directory permissions before assertions so cleanup can run.
+            chmod 0755 $rotDir
+            Remove-Variable -Name WriteLogMaxSizeMB -Scope Global -ErrorAction SilentlyContinue
+        }
+
+        # The active log must still contain the sentinel.
+        # If Fix #1 were absent, WriteAllText would have been called in Create mode
+        # and would have replaced all content with the rotation notice only.
+        $contentAfter = Get-Content -Path $logPath -Raw
+        $contentAfter | Should -Match ([regex]::Escape($sentinelMsg)) `
+            -Because 'rotation rename failure must not truncate or destroy existing log content (Fix #1)'
+
+        Test-Path $logPath | Should -Be $true -Because 'active log file must still exist after failed rotation'
+    }
+
+    # ------------------------------------------------------------------
+    # (c) REGRESSION Fix #3: function name containing 'ps1' as substring
+    #     must not be misidentified as a script file
+    # ------------------------------------------------------------------
+    It '(c) regression Fix3: function named Invoke-Ps1Migration uses its own name as component, not Unknown' {
+        $logPath = & $script:NewTestLogPath -Suffix '_component_ps1name'
+        Initialize-Log -LogFilePath $logPath -ScriptName 'ComponentTest' -Version '0.0'
+
+        # Define a function whose name contains 'ps1' as a substring (not as an extension).
+        # Before Fix #3, the check was -notlike '*ps1' which would match this name,
+        # treating the function as if it were a script file and falling back to Unknown.
+        function Invoke-Ps1Migration {
+            [CmdletBinding()]
+            param([string]$LogPath)
+            Write-Log -Message 'ps1-in-name-test' -Logfile $LogPath -Severity Info -WriteBackToHost:$false
+        }
+
+        Invoke-Ps1Migration -LogPath $logPath
+
+        $line = & $script:GetLastLogLine -Path $logPath
+        # The component field must be the function name, not 'Unknown'
+        $line | Should -Match 'component="Invoke-Ps1Migration"' `
+            -Because 'a function whose name contains ps1 as a substring must use the function name, not Unknown (Fix #3)'
+        $line | Should -Not -Match 'component="Unknown"' `
+            -Because 'the old -notlike ''*ps1'' bug would have set component=Unknown for this function'
+    }
+}

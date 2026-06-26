@@ -66,11 +66,25 @@ function Get-PlatformContext {
         )
     }
     else {
-        # needs .NET 8+, id -u fallback
+        # [System.Environment]::IsPrivilegedProcess requires .NET 7+ (PS 7.4+).
+        # On PS 7.2/7.3 (.NET 6) the property does not exist and access throws
+        # MissingMemberException. Catch only that specific exception so unrelated
+        # fatal errors are not swallowed, then fall through to the id -u fallback.
+        $isAdmin = $false
+        $privilegedProcessChecked = $false
         try {
             $isAdmin = [System.Environment]::IsPrivilegedProcess
+            $privilegedProcessChecked = $true
         }
-        catch {
+        catch [System.Management.Automation.RuntimeException] {
+            # RuntimeException wraps MissingMemberException thrown when the
+            # property does not exist on this .NET version.
+            $privilegedProcessChecked = $false
+        }
+        catch [System.MissingMemberException] {
+            $privilegedProcessChecked = $false
+        }
+        if (-not $privilegedProcessChecked) {
             try {
                 $idOutput = id -u 2>$null
                 $isAdmin = ([int]$idOutput) -eq 0
@@ -103,25 +117,29 @@ function Get-PlatformContext {
         }
     }
     else {
-        try {
-            $raw = loginctl list-sessions --no-legend 2>$null
-            if ($LASTEXITCODE -eq 0 -and $raw) {
-                foreach ($line in ($raw -split "`n")) {
-                    $fields = $line.Trim() -split '\s+'
-                    if ($fields.Count -ge 3) {
-                        $sessionId = $fields[0]
-                        $sessionUser = $fields[2]
-                        $sessionType = (loginctl show-session $sessionId -p Type --value 2>$null)
-                        if ($null -ne $sessionType) { $sessionType = $sessionType.Trim() }
-                        if ($sessionType -in 'x11', 'wayland') {
-                            $interactiveUser = $sessionUser
-                            break
+        # loginctl only exists on Linux (systemd); skip it on macOS to avoid
+        # CommandNotFoundException being silently swallowed.
+        if ($platformStr -ne 'macOS') {
+            try {
+                $raw = loginctl list-sessions --no-legend 2>$null
+                if ($LASTEXITCODE -eq 0 -and $raw) {
+                    foreach ($line in ($raw -split "`n")) {
+                        $fields = $line.Trim() -split '\s+'
+                        if ($fields.Count -ge 3) {
+                            $sessionId = $fields[0]
+                            $sessionUser = $fields[2]
+                            $sessionType = (loginctl show-session $sessionId -p Type --value 2>$null)
+                            if ($null -ne $sessionType) { $sessionType = $sessionType.Trim() }
+                            if ($sessionType -in 'x11', 'wayland') {
+                                $interactiveUser = $sessionUser
+                                break
+                            }
                         }
                     }
                 }
             }
-        }
-        catch {
+            catch {
+            }
         }
 
         if (-not $interactiveUser) {
@@ -157,7 +175,7 @@ function Get-PlatformContext {
         }
         else {
             $xdgSessionId = [System.Environment]::GetEnvironmentVariable('XDG_SESSION_ID')
-            if ($xdgSessionId) {
+            if ($xdgSessionId -and $platformStr -ne 'macOS') {
                 try {
                     $lType = (loginctl show-session $xdgSessionId -p Type --value 2>$null)
                     $lClass = (loginctl show-session $xdgSessionId -p Class --value 2>$null)

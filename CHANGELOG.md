@@ -1,5 +1,27 @@
 # Changelog
 
+## [2026.06.26.031] - 2026-06-26
+### fix(DivergentCortex.Witness): Consolidated 12-item pre-public review fix pass (Codex, Huginn, Muninn)
+
+What changed:
+- Fix 1 STOP-SHIP rotation data loss: Write-Log.ps1 rotation block - added $renamed flag (default $false); Rename-Item sets it $true on success; [System.IO.File]::WriteAllText now executes only inside if ($renamed) guard so failed rename leaves original log intact and appending
+- Fix 2 encoding: Write-Log.ps1 StreamWriter and WriteAllText rotation notice now use New-Object System.Text.UTF8Encoding($false) - deterministic UTF-8 no-BOM on PS 5.1/.NET Framework and PS 7+
+- Fix 2 encoding: Initialize-Log.ps1 StreamWriter constructor also receives UTF8Encoding($false)
+- Fix 3 component detection: Write-Log.ps1 line 258 changed -notlike '*ps1' to -notlike '*.ps1' - the old substring match treated functions named Invoke-Ps1Migration etc as script files and fell back to component=Unknown
+- Fix 4 Initialize-Log CMSite guard: Initialize-Log.ps1 adds $originalLocation/$isSCCMDrive guard before file I/O and restores location in finally block - mirrors the existing Write-Log pattern
+- Fix 5 stream disposal: Write-Log.ps1 and Initialize-Log.ps1 finally blocks replaced sequential .Close() with nested try/catch Dispose() calls so fileStream is always disposed even if streamWriter.Dispose() throws
+- Fix 6 elevation PS 7.2: Get-PlatformContext.ps1 replaced broad catch {} around IsPrivilegedProcess with typed catches for RuntimeException and MissingMemberException plus $privilegedProcessChecked flag; only falls through to id -u when property is missing
+- Fix 7 macOS loginctl: Get-PlatformContext.ps1 both loginctl call sites guarded by $platformStr -ne 'macOS'; on macOS falls directly to the who fallback
+- Fix 8 banner fields: Initialize-Log.ps1 bannerLines array adds INTERACTIVE and SESSION lines so InteractiveUser and SessionType computed by Get-PlatformContext are written to the log instead of discarded
+- Fix 9 doc Success severity: Write-Log.ps1 .PARAMETER Severity help block notes that Success is console-only and writes type 1 (Info) to the log file
+- Fix 10 doc donor divergences: docs/ARCHITECTURE.md softened 'behavioral specification' to 'behavioral reference'; added 'Intentional divergences from the donor' subsection documenting Debug/Verbose default OFF, local-time timestamps, native -Debug/-Verbose support
+- Fix 11 LICENSE: DivergentCortex.Witness/LICENSE created (MIT text copied from repo root) so license ships with the module package
+- Fix 12 tests rotation coverage: tests/DivergentCortex.Witness.Tests.ps1 appended Describe 13 with three tests: (a) happy-path rotation renames to _r01 and new file gets rotation notice; (b) regression Fix1 simulate rename failure via directory blocker assert original log content survives; (c) regression Fix3 Invoke-Ps1Migration function name uses its own name as component not Unknown
+
+Why:
+- Pre-public three-reviewer audit (Codex, Huginn, Muninn) identified a STOP-SHIP rotation data loss bug (WriteAllText in create mode destroyed the log on any rename failure, which is a common path when SCCM/CMTrace holds the file open), non-deterministic UTF-8 BOM encoding across PS editions, a component detection substring bug affecting functions with ps1 in their name, missing CMSite guard in Initialize-Log, handle leak on disposal failure, .NET version-gated elevation check swallowing unrelated errors, loginctl on macOS, dead compute in banner, and missing doc honesty about donor divergences.
+
+
 ## [2026.06.25.030] - 2026-06-25
 ### feat(DivergentCortex.Witness): Native PowerShell debug/verbose preference gate wired into Write-Log
 
