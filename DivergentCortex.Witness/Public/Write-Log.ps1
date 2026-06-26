@@ -1,15 +1,20 @@
-# PSAvoidOverwritingBuiltInCmdlets suppressed, Write-Log is the modules public name
-# PSAvoidGlobalVars suppressed, documented back-compat surface
-# PSAvoidUsingWriteHost suppressed, color output needs Write-Host
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidOverwritingBuiltInCmdlets', '')]
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
-param()
-
 function Write-Log {
     <#
     .SYNOPSIS
         Writes a CMTrace-compatible log entry and optional color-coded console output.
+
+    .NOTES
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        -  Created on:    04/23/2023                                      -
+        =  Author:        Curtis Leggett                                  =
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
+        =-=-                       =-=-=-=-=-=-=-=                     -=-=
+        -       The witness is a ghost,                                   -
+        =                      yet, somewhere,                            =
+        -                             a file is remembering you.          -
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
     .DESCRIPTION
         Write-Log is the primary logging surface for the DivergentCortex.Witness module.
@@ -94,19 +99,6 @@ function Write-Log {
         'Step 1 complete', 'Step 2 complete' | Write-Log -Severity Info -WriteBackToHost:$false
 
         Pipeline input: pipe message strings directly to Write-Log.
-
-    .NOTES
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    04/23/2023                                      -
-        =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                =
-        -  Version:       1.0.1                                           -
-        =-=-                       =-=-=-=-=-=-=-=                     -=-=
-        -       The witness is a ghost,                                   -
-        =                      yet, somewhere,                            =
-        -                             a file is remembering you.          -
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding(SupportsShouldProcess = $false)]
     [OutputType([void])]

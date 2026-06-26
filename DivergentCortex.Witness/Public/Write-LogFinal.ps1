@@ -1,11 +1,20 @@
-# PSAvoidGlobalVars suppressed, documented back-compat surface
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
-param()
-
 function Write-LogFinal {
     <#
     .SYNOPSIS
         Writes a final log entry and triggers the session-end log cleanup pass.
+
+    .NOTES
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        -  Created on:    04/23/2023                                      -
+        =  Author:        Curtis Leggett                                  =
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
+        =-=-                       =-=-=-=-=-=-=-=                     -=-=
+        -       The witness is a ghost,                                   -
+        =                      yet, somewhere,                            =
+        -                             a file is remembering you.          -
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
     .DESCRIPTION
         Use Write-LogFinal as the last log call in a script. It writes the supplied
@@ -40,19 +49,6 @@ function Write-LogFinal {
         Write-LogFinal -Message 'Script finished with warnings.' -Severity Warning
 
         Log a warning as the final entry when the script completed with non-fatal issues.
-
-    .NOTES
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    04/23/2023                                      -
-        =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                =
-        -  Version:       1.0.1                                           -
-        =-=-                       =-=-=-=-=-=-=-=                     -=-=
-        -       The witness is a ghost,                                   -
-        =                      yet, somewhere,                            =
-        -                             a file is remembering you.          -
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
     [OutputType([void])]

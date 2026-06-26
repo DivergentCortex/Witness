@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026.06.26.033] - 2026-06-26
+### refactor(DivergentCortex.Witness): signature .NOTES block moved under .SYNOPSIS in all function files; in-source PSScriptAnalyzer suppressions removed
+
+What changed:
+- In all six function files (Public: Write-Log, Initialize-Log, Write-LogFinal; Private: Clear-LogFile, Get-PlatformContext, Resolve-WitnessLogPath), moved the operator signature .NOTES block to immediately follow .SYNOPSIS, before .DESCRIPTION -- operator prefers the identity block near the top of source, not buried after examples. Comment-based help keyword order in source is not significant to Get-Help rendering.
+- Removed all inline [Diagnostics.CodeAnalysis.SuppressMessageAttribute(...)] declarations from module source. Affected files: Public/Write-Log.ps1 (3 attributes removed: PSAvoidOverwritingBuiltInCmdlets, PSAvoidGlobalVars, PSAvoidUsingWriteHost), Public/Write-LogFinal.ps1 (1 attribute removed: PSAvoidGlobalVars), Private/Resolve-WitnessLogPath.ps1 (1 attribute removed: PSAvoidGlobalVars). The empty param() blocks that existed solely to carry these attributes were also removed.
+- Removed the associated suppression comment lines (# PSAvoid... suppressed, ...) from the three affected files.
+- No PSScriptAnalyzerSettings.psd1 or other suppression mechanism introduced. PSScriptAnalyzer findings for PSAvoidUsingWriteHost, PSAvoidGlobalVars, and PSAvoidOverwritingBuiltInCmdlets are now visible and intentional -- they reflect documented design choices (color console output, back-compat globals, the module public name).
+- Pester suite remains green: 78 tests passed, 0 failed after both changes.
+
+Why:
+- Operator-directed changes. Signature block is personal identity and the operator wants it visible at the top of each function source. In-source suppression attributes hide intentional analyzer findings that should be transparent to any reader of the code.
+
+
 ## [2026.06.26.032] - 2026-06-26
 ### chore(DivergentCortex.Witness): Add operator identity signature block to all module files
 
