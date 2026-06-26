@@ -26,9 +26,9 @@ function Clear-LogFile {
         =  Organization:  Divergent Cortex                                =
         -  Version:       2026.03.24.010                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
-        -  Divergent Tools are built to survive in hostile environments.  -
-        =  * Does not include marriages, children, or pets, or vocanoes. =
-        -                                                                 -
+        -        The witness is a ghost,                                   -
+        =                 yet, somewhere,                                 =
+        -                       a file is remembering you.                -
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
