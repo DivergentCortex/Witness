@@ -26,11 +26,11 @@ function Write-LogFinal {
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    4/23/2023 2:15 PM                               -
+        -  Created on:    3/19/2024 1:20 PM                               -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Synapse Co.                                -
+        -  Copyright:     2024 Synapse Co.                                -
         =  Organization:  Divergent Cortex                                =
-        -  Version:       2026.03.24.010                                  -
+        -  Version:       2024.09.30.003                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
         =                      yet, somewhere,                            =
@@ -38,7 +38,7 @@ function Write-LogFinal {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory = $true)]
         [string]$Message,
 
@@ -60,11 +60,13 @@ function Write-LogFinal {
     # Resolve MaxAgeDays using the same module-scope / global-override chain Write-Log uses.
     # Both cleanup paths must apply the same retention policy.
     $maxAgeDays = $script:WitnessMaxAgeDays
-    if (Test-Path Variable:Global:WriteLogMaxAgeDays) { $maxAgeDays = $Global:WriteLogMaxAgeDays }
+    if (Test-Path Variable:Global:WriteLogMaxAgeDays) {
+        $maxAgeDays = $Global:WriteLogMaxAgeDays 
+    }
 
     # ---- Resolve log file path (Fix [2], Fix [1/3]) ----
     $callerScopePath = $PSCmdlet.SessionState.PSVariable.GetValue('LogFilePath')
-    $resolvedPath    = Resolve-WitnessLogPath -CallerResolved $callerScopePath
+    $resolvedPath = Resolve-WitnessLogPath -CallerResolved $callerScopePath
 
     if ([string]::IsNullOrWhiteSpace($resolvedPath)) {
         # Fix [R3]: set sentinel before returning so no future path can trigger cleanup
@@ -84,7 +86,8 @@ function Write-LogFinal {
     $script:WitnessCleanupRan = $true  # set before calling to prevent any recursion path
     try {
         Clear-LogFile -LogFolder $logFolder -MaxAgeDays $maxAgeDays
-    } catch {
+    }
+    catch {
         Write-Log -Message "Log cleanup failed: $_" -Severity Error
     }
 }

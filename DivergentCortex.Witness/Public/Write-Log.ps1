@@ -56,9 +56,9 @@ function Write-Log {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    4/23/2023 2:15 PM                               -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Synapse Co.                                -
+        -  Copyright:     2023 Synapse Co.                                -
         =  Organization:  Divergent Cortex                                =
-        -  Version:       2026.03.24.010                                  -
+        -  Version:       2026.06.25.010                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
         =                      yet, somewhere,                            =
@@ -66,7 +66,7 @@ function Write-Log {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
-    Param (
+    param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$Message,
 
@@ -101,7 +101,8 @@ function Write-Log {
     $callerCandidate = $null
     if ($PSBoundParameters.ContainsKey('Logfile') -and -not [string]::IsNullOrWhiteSpace($Logfile)) {
         $callerCandidate = $Logfile
-    } else {
+    }
+    else {
         $callerScopePath = $PSCmdlet.SessionState.PSVariable.GetValue('LogFilePath')
         if (-not [string]::IsNullOrWhiteSpace($callerScopePath)) {
             $callerCandidate = $callerScopePath
@@ -116,36 +117,56 @@ function Write-Log {
     # ---- Config (Fix [13]) ----
     # Module-scope defaults; global overrides honored for back-compat.
     $autoCleanup = $script:WitnessAutoCleanup
-    if (Test-Path Variable:Global:WriteLogAutoCleanup) { $autoCleanup = $Global:WriteLogAutoCleanup }
+    if (Test-Path Variable:Global:WriteLogAutoCleanup) {
+        $autoCleanup = $Global:WriteLogAutoCleanup 
+    }
 
     $maxSizeMB = $script:WitnessMaxSizeMB
-    if (Test-Path Variable:Global:WriteLogMaxSizeMB) { $maxSizeMB = $Global:WriteLogMaxSizeMB }
+    if (Test-Path Variable:Global:WriteLogMaxSizeMB) {
+        $maxSizeMB = $Global:WriteLogMaxSizeMB 
+    }
 
     $maxAgeDays = $script:WitnessMaxAgeDays
-    if (Test-Path Variable:Global:WriteLogMaxAgeDays) { $maxAgeDays = $Global:WriteLogMaxAgeDays }
+    if (Test-Path Variable:Global:WriteLogMaxAgeDays) {
+        $maxAgeDays = $Global:WriteLogMaxAgeDays 
+    }
 
     $verboseToConsole = $script:WitnessVerboseConsole
-    if (Test-Path Variable:Global:VerboseConsole) { $verboseToConsole = $Global:VerboseConsole }
+    if (Test-Path Variable:Global:VerboseConsole) {
+        $verboseToConsole = $Global:VerboseConsole 
+    }
 
     $verboseToLogfile = $script:WitnessVerboseLogfile
-    if (Test-Path Variable:Global:VerboseLogfile) { $verboseToLogfile = $Global:VerboseLogfile }
+    if (Test-Path Variable:Global:VerboseLogfile) {
+        $verboseToLogfile = $Global:VerboseLogfile 
+    }
 
     $debugToConsole = $script:WitnessDebugConsole
-    if (Test-Path Variable:Global:DebugConsole) { $debugToConsole = $Global:DebugConsole }
+    if (Test-Path Variable:Global:DebugConsole) {
+        $debugToConsole = $Global:DebugConsole 
+    }
 
     $debugToLogfile = $script:WitnessDebugLogfile
-    if (Test-Path Variable:Global:DebugLogfile) { $debugToLogfile = $Global:DebugLogfile }
+    if (Test-Path Variable:Global:DebugLogfile) {
+        $debugToLogfile = $Global:DebugLogfile 
+    }
 
     # Map "Information" to "Info"
-    if ($Severity -eq 'Information') { $Severity = 'Info' }
+    if ($Severity -eq 'Information') {
+        $Severity = 'Info' 
+    }
 
     # Early return if both outputs disabled for this severity
-    if ($Severity -eq 'Verbose' -and (-not $verboseToConsole) -and (-not $verboseToLogfile)) { return }
-    if ($Severity -eq 'Debug'   -and (-not $debugToConsole)   -and (-not $debugToLogfile))   { return }
+    if ($Severity -eq 'Verbose' -and (-not $verboseToConsole) -and (-not $verboseToLogfile)) {
+        return 
+    }
+    if ($Severity -eq 'Debug' -and (-not $debugToConsole) -and (-not $debugToLogfile)) {
+        return 
+    }
 
     # ---- SCCM drive detection (Windows only) ----
     $originalLocation = Get-Location
-    $isSCCMDrive      = $false
+    $isSCCMDrive = $false
     if ($script:WitnessIsWindows) {
         if ($null -ne $originalLocation.Provider -and $originalLocation.Provider.Name -eq 'CMSite') {
             $isSCCMDrive = $true
@@ -155,21 +176,26 @@ function Write-Log {
 
     try {
         # ---- Caller detection ----
-        $callStack          = Get-PSCallStack
-        $Source             = 'Unknown'
+        $callStack = Get-PSCallStack
+        $Source = 'Unknown'
         $callerFunctionName = 'Unknown'
-        $lineNumber         = '?'
+        $lineNumber = '?'
 
         if ($null -ne $callStack -and $callStack.Count -gt 1) {
             $callerInfo = $callStack[1]
-            if ($callerInfo.Location)         { $Source     = $callerInfo.Location }
-            if ($callerInfo.ScriptLineNumber)  { $lineNumber = $callerInfo.ScriptLineNumber }
+            if ($callerInfo.Location) {
+                $Source = $callerInfo.Location 
+            }
+            if ($callerInfo.ScriptLineNumber) {
+                $lineNumber = $callerInfo.ScriptLineNumber 
+            }
             if ($callerInfo.Command) {
                 $callerFunctionName = $callerInfo.Command
                 if ($callerFunctionName -like '*.ps1') {
                     $callerFunctionName = [System.IO.Path]::GetFileNameWithoutExtension($callerFunctionName)
                     Write-Verbose "Call from script body: $callerFunctionName"
-                } else {
+                }
+                else {
                     Write-Verbose "Call from function: $callerFunctionName"
                 }
             }
@@ -180,11 +206,13 @@ function Write-Log {
         if ([string]::IsNullOrEmpty($Component)) {
             if ($callerFunctionName -ne 'Unknown' -and $callerFunctionName -notlike '*ps1') {
                 $Component = $callerFunctionName
-            } else {
+            }
+            else {
                 $callerComponent = $PSCmdlet.SessionState.PSVariable.GetValue('Component')
                 if (-not [string]::IsNullOrEmpty($callerComponent)) {
                     $Component = $callerComponent
-                } else {
+                }
+                else {
                     $Component = $callerFunctionName
                 }
             }
@@ -193,41 +221,56 @@ function Write-Log {
             if ($callStack.Count -gt 1 -and $null -ne $callStack[1].InvocationInfo -and $null -ne $callStack[1].InvocationInfo.MyCommand) {
                 $Component = $callStack[1].InvocationInfo.MyCommand.Name
             }
-            if ([string]::IsNullOrEmpty($Component)) { $Component = 'Unknown' }
+            if ([string]::IsNullOrEmpty($Component)) {
+                $Component = 'Unknown' 
+            }
         }
 
         # ---- Timestamp (local time, no UTC offset - deliberate operator preference) ----
-        $DateTime  = Get-Date
-        $LogDate   = $DateTime.ToString('MM-dd-yyyy')
-        $LogTime   = $DateTime.ToString('HH:mm:ss.fff')
+        $DateTime = Get-Date
+        $LogDate = $DateTime.ToString('MM-dd-yyyy')
+        $LogTime = $DateTime.ToString('HH:mm:ss.fff')
 
         # ---- Severity -> CMTrace type numeric mapping ----
         $severityType = '1'
-        if ($Severity -eq 'Error')       { $severityType = '3' }
-        elseif ($Severity -eq 'Warning') { $severityType = '2' }
-        elseif ($Severity -eq 'Info')    { $severityType = '1' }
-        elseif ($Severity -eq 'Success') { $severityType = '1' }
-        elseif ($Severity -eq 'Verbose') { $severityType = '4' }
-        elseif ($Severity -eq 'Debug')   { $severityType = '5' }
+        if ($Severity -eq 'Error') {
+            $severityType = '3' 
+        }
+        elseif ($Severity -eq 'Warning') {
+            $severityType = '2' 
+        }
+        elseif ($Severity -eq 'Info') {
+            $severityType = '1' 
+        }
+        elseif ($Severity -eq 'Success') {
+            $severityType = '1' 
+        }
+        elseif ($Severity -eq 'Verbose') {
+            $severityType = '4' 
+        }
+        elseif ($Severity -eq 'Debug') {
+            $severityType = '5' 
+        }
 
         # ---- context= field resolved per write (Fix [4]) ----
         # Donor-parity: WindowsIdentity per write on Windows (impersonation-correct).
         # Non-Windows: cheap [Environment] API, no loginctl/who per line.
         if ($script:WitnessIsWindows) {
             $contextUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        } else {
+        }
+        else {
             $contextUser = "$([System.Environment]::UserDomainName)\$([System.Environment]::UserName)"
         }
 
         # ---- Build CMTrace log line ----
         $logline = "<![LOG[$Message]LOG]!>" +
-            "<time=`"$LogTime`" " +
-            "date=`"$LogDate`" " +
-            "component=`"$Component`" " +
-            "context=`"$contextUser`" " +
-            "type=`"$severityType`" " +
-            "thread=`"$PID`" " +
-            "file=`"$Source`">"
+        "<time=`"$LogTime`" " +
+        "date=`"$LogDate`" " +
+        "component=`"$Component`" " +
+        "context=`"$contextUser`" " +
+        "type=`"$severityType`" " +
+        "thread=`"$PID`" " +
+        "file=`"$Source`">"
 
         # ---- Create log directory if needed ----
         $logDir = Split-Path $Logfile
@@ -237,8 +280,12 @@ function Write-Log {
 
         # ---- Console output ----
         $shouldWriteConsole = $true
-        if ($Severity -eq 'Verbose') { $shouldWriteConsole = $verboseToConsole }
-        elseif ($Severity -eq 'Debug') { $shouldWriteConsole = $debugToConsole }
+        if ($Severity -eq 'Verbose') {
+            $shouldWriteConsole = $verboseToConsole 
+        }
+        elseif ($Severity -eq 'Debug') {
+            $shouldWriteConsole = $debugToConsole 
+        }
 
         if ($WriteBackToHost -and $shouldWriteConsole) {
             $displayComponent = $Component
@@ -247,16 +294,21 @@ function Write-Log {
             }
 
             $severityConfig = @{
-                'Error'   = @{ Label = ' ERROR ';   LabelColor = 'Red';      MessageColor = 'Red' }
-                'Warning' = @{ Label = ' WARNING '; LabelColor = 'Yellow';   MessageColor = 'Yellow' }
-                'Info'    = @{ Label = ' INFO ';    LabelColor = 'Green';    MessageColor = 'White' }
-                'Success' = @{ Label = ' SUCCESS '; LabelColor = 'Green';    MessageColor = 'Green' }
+                'Error'   = @{ Label = ' ERROR '; LabelColor = 'Red'; MessageColor = 'Red' }
+                'Warning' = @{ Label = ' WARNING '; LabelColor = 'Yellow'; MessageColor = 'Yellow' }
+                'Info'    = @{ Label = ' INFO '; LabelColor = 'Green'; MessageColor = 'White' }
+                'Success' = @{ Label = ' SUCCESS '; LabelColor = 'Green'; MessageColor = 'Green' }
                 'Verbose' = @{ Label = ' VERBOSE '; LabelColor = 'DarkGray'; MessageColor = 'DarkGray' }
-                'Debug'   = @{ Label = ' DEBUG ';   LabelColor = 'Magenta';  MessageColor = 'Magenta' }
+                'Debug'   = @{ Label = ' DEBUG '; LabelColor = 'Magenta'; MessageColor = 'Magenta' }
             }
 
             $config = $severityConfig[$Severity]
-            $finalMessageColor = if ($PSBoundParameters.ContainsKey('Color')) { $Color } else { $config.MessageColor }
+            $finalMessageColor = if ($PSBoundParameters.ContainsKey('Color')) {
+                $Color 
+            }
+            else {
+                $config.MessageColor 
+            }
 
             Write-Host '[' -NoNewline -ForegroundColor Gray
             Write-Host $config.Label -NoNewline -ForegroundColor $config.LabelColor
@@ -271,8 +323,12 @@ function Write-Log {
 
         # ---- Logfile output ----
         $shouldWriteLogfile = $true
-        if ($Severity -eq 'Verbose') { $shouldWriteLogfile = $verboseToLogfile }
-        elseif ($Severity -eq 'Debug') { $shouldWriteLogfile = $debugToLogfile }
+        if ($Severity -eq 'Verbose') {
+            $shouldWriteLogfile = $verboseToLogfile 
+        }
+        elseif ($Severity -eq 'Debug') {
+            $shouldWriteLogfile = $debugToLogfile 
+        }
 
         # ---- Size-based log rotation ----
         # Fix [5]: rotation notice uses [System.Environment]::NewLine (\r\n Windows, \n Linux)
@@ -280,28 +336,33 @@ function Write-Log {
         if ($shouldWriteLogfile -and (Test-Path $Logfile)) {
             $currentSize = (Get-Item $Logfile).Length / 1MB
             if ($currentSize -ge $maxSizeMB) {
-                $rotLogDir   = Split-Path $Logfile
-                $logBase     = [System.IO.Path]::GetFileNameWithoutExtension($Logfile)
-                $logExt      = [System.IO.Path]::GetExtension($Logfile)
-                $rotNum      = 1
+                $rotLogDir = Split-Path $Logfile
+                $logBase = [System.IO.Path]::GetFileNameWithoutExtension($Logfile)
+                $logExt = [System.IO.Path]::GetExtension($Logfile)
+                $rotNum = 1
                 do {
                     $archiveName = '{0}_r{1:D2}{2}' -f $logBase, $rotNum, $logExt
                     $archivePath = Join-Path $rotLogDir $archiveName
                     $rotNum++
                 } while (Test-Path $archivePath)
 
-                try { Rename-Item -Path $Logfile -NewName $archiveName -Force } catch {}
+                try {
+                    Rename-Item -Path $Logfile -NewName $archiveName -Force 
+                }
+                catch {
+                }
 
                 $rotationMsg = "<![LOG[LOG ROTATION: Previous log archived to $archiveName (exceeded ${maxSizeMB}MB)]LOG]!>" +
-                    "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
-                    "context=`"$contextUser`" " +
-                    "type=`"1`" thread=`"$PID`" file=`"Write-Log.ps1`">"
+                "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
+                "context=`"$contextUser`" " +
+                "type=`"1`" thread=`"$PID`" file=`"Write-Log.ps1`">"
 
                 # Fix [R2]: surface rotation-write failure - an empty catch hides disk-full or perm errors.
                 # Cannot use Write-Log here (new file may not exist yet); Write-Warning reaches the stream.
                 try {
                     [System.IO.File]::WriteAllText($Logfile, "$rotationMsg$([System.Environment]::NewLine)")
-                } catch {
+                }
+                catch {
                     Write-Warning "Write-Log: Failed to write rotation notice to '$Logfile': $_"
                 }
             }
@@ -314,7 +375,8 @@ function Write-Log {
             if ($logFolder -and (Test-Path $logFolder)) {
                 try {
                     Clear-LogFile -LogFolder $logFolder -MaxAgeDays $maxAgeDays
-                } catch {
+                }
+                catch {
                     Write-Warning "Auto-cleanup failed: $_"
                 }
             }
@@ -322,51 +384,64 @@ function Write-Log {
 
         # ---- Write to logfile with retry on lock ----
         if ($shouldWriteLogfile) {
-            $retryCount     = 0
+            $retryCount = 0
             $writeSucceeded = $false
 
             while (-not $writeSucceeded -and $retryCount -le $MaxRetries) {
-                $fileStream   = $null
+                $fileStream = $null
                 $streamWriter = $null
 
                 try {
-                    $fileMode   = [System.IO.FileMode]::Append
+                    $fileMode = [System.IO.FileMode]::Append
                     $fileAccess = [System.IO.FileAccess]::Write
-                    $fileShare  = [System.IO.FileShare]::ReadWrite
+                    $fileShare = [System.IO.FileShare]::ReadWrite
 
-                    $fileStream             = New-Object System.IO.FileStream($Logfile, $fileMode, $fileAccess, $fileShare)
-                    $streamWriter           = New-Object System.IO.StreamWriter($fileStream)
-                    $streamWriter.NewLine   = [System.Environment]::NewLine
+                    $fileStream = New-Object System.IO.FileStream($Logfile, $fileMode, $fileAccess, $fileShare)
+                    $streamWriter = New-Object System.IO.StreamWriter($fileStream)
+                    $streamWriter.NewLine = [System.Environment]::NewLine
                     $streamWriter.WriteLine($logline)
                     $writeSucceeded = $true
 
                     # Contention notice on successful retry
                     if ($retryCount -gt 0) {
                         $retryNote = "<![LOG[WRITE-LOG FILE CONTENTION: Previous entry required $retryCount retry attempt(s) due to file lock on $Logfile]LOG]!>" +
-                            "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
-                            "context=`"$contextUser`" " +
-                            "type=`"2`" thread=`"$PID`" file=`"Write-Log.ps1`">"
+                        "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
+                        "context=`"$contextUser`" " +
+                        "type=`"2`" thread=`"$PID`" file=`"Write-Log.ps1`">"
                         $streamWriter.WriteLine($retryNote)
                     }
-                } catch [System.IO.IOException] {
+                }
+                catch [System.IO.IOException] {
                     $retryCount++
                     if ($retryCount -le $MaxRetries) {
                         Start-Sleep -Milliseconds ([int]($RetryDelay * 1000))
-                    } else {
+                    }
+                    else {
                         Write-Warning "Failed to write to log after $MaxRetries retries (file locked): $Logfile"
                     }
-                } catch {
+                }
+                catch {
                     Write-Warning "Failed to write to log file: $_"
                     break
-                } finally {
-                    if ($null -ne $streamWriter) { $streamWriter.Close() }
-                    if ($null -ne $fileStream)   { $fileStream.Close() }
+                }
+                finally {
+                    if ($null -ne $streamWriter) {
+                        $streamWriter.Close() 
+                    }
+                    if ($null -ne $fileStream) {
+                        $fileStream.Close() 
+                    }
                 }
             }
         }
-    } finally {
+    }
+    finally {
         if ($isSCCMDrive) {
-            try { Set-Location $originalLocation -ErrorAction SilentlyContinue } catch {}
+            try {
+                Set-Location $originalLocation -ErrorAction SilentlyContinue 
+            }
+            catch {
+            }
         }
     }
 }

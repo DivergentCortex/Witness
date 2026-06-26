@@ -102,7 +102,7 @@ SCCM is Windows-only.
 - powershell-5-expert: 5.1 compatibility verification.
 - quality-engineer: Pester tests.
 - documentation-engineer: ARCHITECTURE.md + README.
-File ownership partitioned so no two teammates edit the same file.
+  File ownership partitioned so no two teammates edit the same file.
 
 ## Open questions for review
 
