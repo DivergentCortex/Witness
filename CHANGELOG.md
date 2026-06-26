@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026.06.25.024] - 2026-06-25
+### docs: Final .NOTES signature block with =-=- border and tagline
+
+What changed:
+- Replaced .NOTES signature in all 6 function files with operator-authored block: =-=- border, Created on / Author / Copyright / Organization / Version fields, tagline ('Divergent Tools are built to survive in hostile environments')
+
+Why:
+- Operator-authored signature reflecting the style and personality they wanted. Previous iterations were too minimal -- this matches the visual weight and character of the original donor signature while adding Divergent Cortex branding.
+
+
 ## [2026.06.25.023] - 2026-06-25
 ### docs: Update .NOTES signature to match donor co-author line
 
