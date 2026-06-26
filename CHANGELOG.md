@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026.06.25.030] - 2026-06-25
+### feat(DivergentCortex.Witness): Native PowerShell debug/verbose preference gate wired into Write-Log
+
+What changed:
+- Write-Log.ps1: replaced direct $DebugPreference/$VerbosePreference reads with $PSCmdlet.GetVariableValue('DebugPreference') and GetVariableValue('VerbosePreference') - the only mechanism that crosses the module session-state boundary and reads the caller's preference value set by -Debug/-Verbose
+- Write-Log.ps1: native preference is now the master on-switch; when active (any value -ne 'SilentlyContinue') it enables BOTH console and logfile output for that severity, overriding $Global:* and $script:Witness* per-surface settings
+- Write-Log.ps1: $Global:DebugConsole/$Global:DebugLogfile and Verbose equivalents remain as per-surface fine-grained overrides and back-compat surface; existing consumers that set those flags are unaffected
+- Write-Log.ps1: added detailed code comments documenting the module boundary subtlety so no future agent reverts to the broken direct-read pattern
+- tests/DivergentCortex.Witness.Tests.ps1: added Describe 9 'Native debug/verbose preference gate' with 9 tests: (a) cascade via parent [CmdletBinding()] function called with -Debug/-Verbose propagates into Write-Log; (b) $DebugPreference = 'Continue' in scope activates Write-Log debug/verbose output; (c) default quiet with no preference and no global flags produces no output; (d) $Global:DebugLogfile/$Global:VerboseLogfile back-compat still works
+- docs/ARCHITECTURE.md: added 'Native debug/verbose preference gate' section covering the module boundary subtlety, GetVariableValue rationale, empirical verification, precedence model, and robust -ne 'SilentlyContinue' comparison
+- README.md: added 'Native debug and verbose control' section with usage examples, module boundary note, and precedence description; corrected $Global:Verbose*/$Global:Debug* defaults in the configuration table from $true (wrong) to $false (actual module default)
+
+Why:
+- Write-Log ignored the native PowerShell preference mechanism ($DebugPreference/$VerbosePreference and -Debug/-Verbose switches) and only honored custom $Global: flags. Consumers running their scripts with -Debug got no Write-Log output. The fix required $PSCmdlet.GetVariableValue() rather than direct variable reads because module functions have their own session-state copy of preference variables which always returns 'SilentlyContinue'. GetVariableValue walks the dynamic scope chain and crosses the module boundary. Verified empirically: direct $DebugPreference inside module = always 'SilentlyContinue'; GetVariableValue = 'Continue' when parent was called with -Debug. Full Pester suite: 75 tests pass, 0 fail.
+
+
 ## [2026.06.25.029] - 2026-06-25
 ### refactor(DivergentCortex.Witness): Strip inline comment slop across all module functions
 

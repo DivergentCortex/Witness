@@ -97,6 +97,37 @@ The adapter result is used only for the Initialize-Log start banner. Write-Log r
 
 For details on module internals, see [docs/ARCHITECTURE.md](DivergentCortex.Witness/docs/ARCHITECTURE.md).
 
+## Native debug and verbose control
+
+Write-Log honors the standard PowerShell preference variables. A consumer who invokes their script or function with `-Debug` or `-Verbose` gets debug/verbose output from Write-Log automatically, with no flags required.
+
+```powershell
+# Run your script with -Debug: every Write-Log -Severity Debug call emits automatically
+.\MyScript.ps1 -Debug
+
+# Set the preference directly in scope - same effect
+$DebugPreference = 'Continue'
+Write-Log -Message 'Diagnosing state' -Severity Debug
+
+# -Verbose works identically
+$VerbosePreference = 'Continue'
+Write-Log -Message 'Processing item 42' -Severity Verbose
+```
+
+This matches how `Write-Debug` and `Write-Verbose` behave. When the preference is `'SilentlyContinue'` (the default) and no `$Global:` flags are set, debug and verbose produce nothing.
+
+### Module boundary note
+
+Write-Log is a module function. PowerShell's preference variable propagation does NOT automatically cross the module session-state boundary - reading `$DebugPreference` directly inside the module always returns the module's own default (`'SilentlyContinue'`), even when the calling script set it to `'Continue'`. Write-Log reads preference variables with `$PSCmdlet.GetVariableValue('DebugPreference')`, which walks the dynamic scope chain and crosses the module boundary correctly. This is the only reliable mechanism for module functions.
+
+### Precedence
+
+The three sources are evaluated independently per surface (console and log file):
+
+1. Native `$DebugPreference`/`$VerbosePreference` (via `GetVariableValue`): master "on" switch. When active, enables both console and file output.
+2. `$Global:DebugConsole`/`$Global:DebugLogfile` (and Verbose equivalents): per-surface overrides. These still work unchanged for back-compat.
+3. Module defaults (all `$false`): baseline when neither of the above is set.
+
 ## Configuration
 
 These module-scope defaults can be overridden with global variables before or after import:
@@ -106,10 +137,10 @@ These module-scope defaults can be overridden with global variables before or af
 | `$Global:WriteLogMaxSizeMB`   | 10      | Rotate the log file when it exceeds this size in MB |
 | `$Global:WriteLogMaxAgeDays`  | 7       | Delete log files older than this many days          |
 | `$Global:WriteLogAutoCleanup` | $true   | Run age-based cleanup once per session              |
-| `$Global:VerboseConsole`      | $true   | Show Verbose entries in the console                 |
-| `$Global:VerboseLogfile`      | $true   | Write Verbose entries to the log file               |
-| `$Global:DebugConsole`        | $true   | Show Debug entries in the console                   |
-| `$Global:DebugLogfile`        | $true   | Write Debug entries to the log file                 |
+| `$Global:VerboseConsole`      | $false  | Show Verbose entries in the console (back-compat override) |
+| `$Global:VerboseLogfile`      | $false  | Write Verbose entries to the log file (back-compat override) |
+| `$Global:DebugConsole`        | $false  | Show Debug entries in the console (back-compat override) |
+| `$Global:DebugLogfile`        | $false  | Write Debug entries to the log file (back-compat override) |
 
 ## Cross-platform notes
 

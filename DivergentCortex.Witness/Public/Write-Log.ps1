@@ -162,6 +162,49 @@ function Write-Log {
         $maxAgeDays = $script:WitnessMaxAgeDays
         if (Test-Path Variable:Global:WriteLogMaxAgeDays) { $maxAgeDays = $Global:WriteLogMaxAgeDays }
 
+        # Preference-variable gate: read the native PS mechanism first.
+        #
+        # MODULE BOUNDARY SUBTLETY (critical - do not change this pattern):
+        # Write-Log is defined inside a module. When a caller outside the module sets
+        # $DebugPreference = 'Continue' (or passes -Debug to an ancestor function), that
+        # value lives in the CALLER's scope/session-state, not in the module's scope.
+        # Reading $DebugPreference directly here returns the MODULE's copy, which is always
+        # 'SilentlyContinue' by default - the caller's value is invisible.
+        #
+        # The fix: $PSCmdlet.GetVariableValue('DebugPreference') walks the DYNAMIC scope
+        # chain (caller -> parent -> grandparent) and crosses the module boundary to find
+        # the value the caller or its ancestor set. This is the only reliable way to read
+        # a preference variable set by -Debug/-Verbose on a parent function when the callee
+        # is in a different module session-state.
+        #
+        # Verified empirically (2026-06-26):
+        #   - $DebugPreference direct: always returns module default ('SilentlyContinue')
+        #     even when parent was called with -Debug.
+        #   - $PSCmdlet.GetVariableValue('DebugPreference'): returns 'Continue' when the
+        #     caller OR any ancestor was invoked with -Debug. Crosses the module boundary.
+        #
+        # Robust check: test -ne 'SilentlyContinue' rather than -eq 'Continue'.
+        # 'Inquire', 'Break', and 'Stop' all indicate output is wanted; any non-silent
+        # value means "active". Do not assume -Debug sets exactly 'Continue'.
+        #
+        # Precedence (applied independently per surface - console and logfile):
+        #   1. Native preference variable ($DebugPreference / $VerbosePreference) is the
+        #      master "on" switch. When active it enables BOTH console and file for that
+        #      severity regardless of the $Global:* or $script:Witness* settings.
+        #   2. $Global:DebugConsole / $Global:DebugLogfile (and Verbose equivalents) are
+        #      per-surface fine-grained overrides. Consumers who set only $Global:DebugLogfile
+        #      = $true still get file-only output without touching the native mechanism.
+        #   3. $script:Witness* defaults (set in the .psm1 loader) are the fallback when
+        #      neither the native preference nor the $Global: override is set.
+        #
+        # Default behavior (no -Debug, no preference set, no $Global: flag):
+        #   - All three sources evaluate to false -> Debug/Verbose produce nothing.
+
+        $callerDebugPref   = $PSCmdlet.GetVariableValue('DebugPreference')
+        $callerVerbosePref = $PSCmdlet.GetVariableValue('VerbosePreference')
+        $nativeDebugActive   = ($null -ne $callerDebugPref)   -and ($callerDebugPref   -ne 'SilentlyContinue')
+        $nativeVerboseActive = ($null -ne $callerVerbosePref) -and ($callerVerbosePref -ne 'SilentlyContinue')
+
         $verboseToConsole = $script:WitnessVerboseConsole
         if (Test-Path Variable:Global:VerboseConsole) { $verboseToConsole = $Global:VerboseConsole }
 
@@ -173,6 +216,10 @@ function Write-Log {
 
         $debugToLogfile = $script:WitnessDebugLogfile
         if (Test-Path Variable:Global:DebugLogfile) { $debugToLogfile = $Global:DebugLogfile }
+
+        # Native preference is the master on-switch: when active, enable both surfaces.
+        if ($nativeVerboseActive) { $verboseToConsole = $true; $verboseToLogfile = $true }
+        if ($nativeDebugActive)   { $debugToConsole   = $true; $debugToLogfile   = $true }
 
         if ($Severity -eq 'Information') { $Severity = 'Info' }
 
