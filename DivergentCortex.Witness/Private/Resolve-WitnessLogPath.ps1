@@ -1,32 +1,41 @@
+# PSScriptAnalyzer suppressions:
+# PSAvoidGlobalVars: $Global:LogFilePath is the documented legacy fallback for consumers
+#   that set this before importing the module. Intentional, not accidental global use.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
+param()
+
 function Resolve-WitnessLogPath {
     <#
     .SYNOPSIS
-        Resolves the active log file path using a layered lookup.
+        Resolves the active log file path using a deterministic layered lookup.
 
     .DESCRIPTION
-        Shared path resolver used by Write-Log and Write-LogFinal. Walks a
-        deterministic resolution order:
+        Shared by Write-Log and Write-LogFinal. Walks three resolution layers in order:
 
-            1. CallerResolved (explicit param or caller-scope value, passed in by
-               the public function that already checked those layers).
-            2. $script:WitnessLogFilePath (set by Initialize-Log).
-            3. $Global:LogFilePath (dot-source back-compat).
+          1. CallerResolved -- the value the public caller already resolved from its
+             own parameter and caller-scope check. Pass $null if nothing was found.
+          2. $script:WitnessLogFilePath -- set by Initialize-Log.
+          3. $Global:LogFilePath -- legacy dot-source back-compat fallback.
 
-        Returns $null if no layer yields a value.
+        Returns $null when no layer yields a non-whitespace value.
 
     .PARAMETER CallerResolved
-        The value the public caller already resolved from its own parameter and
-        caller-scope lookup. Pass $null if nothing was found at those layers.
+        The path the public caller already resolved from its parameter and caller-scope
+        check. Pass $null or empty string if those layers yielded nothing.
+
+    .OUTPUTS
+        System.String -- the resolved path, or $null.
 
     .EXAMPLE
         $path = Resolve-WitnessLogPath -CallerResolved $userSuppliedPath
+        if (-not $path) { throw 'No log path available.' }
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    6/18/2026 11:15 AM                              -
         =  Author:        Curtis Leggett                                  =
         -  Copyright:     2026 Synapse Co.                                -
-        =  Organization:  Divergent Cortex                                =
+        =  Organization:  Divergent Cortex                                -
         -  Version:       2026.06.18.001                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
@@ -35,7 +44,9 @@ function Resolve-WitnessLogPath {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
+    [OutputType([System.String])]
     param(
+        [Parameter(Mandatory = $false)]
         [string]$CallerResolved
     )
 

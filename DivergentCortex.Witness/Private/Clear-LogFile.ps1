@@ -4,26 +4,32 @@ function Clear-LogFile {
         Removes log files older than a specified age from a folder.
 
     .DESCRIPTION
-        Scans the target folder for *.log files whose LastWriteTime is older than
-        MaxAgeDays and deletes them. Called automatically by Write-Log (once per
-        session) and by Write-LogFinal. Both callers share a cleanup sentinel so
-        this never runs twice in a single session.
+        Scans the target folder for *.log files whose LastWriteTime predates the
+        MaxAgeDays cutoff and deletes them. Called automatically by Write-Log (once
+        per session, gated by the cleanup sentinel) and by Write-LogFinal. The shared
+        sentinel ensures this never runs twice in one session.
 
     .PARAMETER LogFolder
         Path to the folder containing log files to evaluate.
 
     .PARAMETER MaxAgeDays
-        Number of days to retain logs. Files older than this are deleted. Default: 7.
+        Retention window in days. Files older than this threshold are deleted.
+        Default: 7.
+
+    .OUTPUTS
+        None.
 
     .EXAMPLE
-        Clear-LogFile -LogFolder "C:\Logs" -MaxAgeDays 14
+        Clear-LogFile -LogFolder 'C:\Logs' -MaxAgeDays 14
+
+        Delete all *.log files in C:\Logs older than 14 days.
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    7/11/2023 10:45 AM                              -
         =  Author:        Curtis Leggett                                  =
         -  Copyright:     2023 Synapse Co.                                -
-        =  Organization:  Divergent Cortex                                =
+        =  Organization:  Divergent Cortex                                -
         -  Version:       2025.02.08.006                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
@@ -32,11 +38,14 @@ function Clear-LogFile {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
+    [OutputType([void])]
     param(
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]$LogFolder,
 
-        [Parameter()]
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 365)]
         [int]$MaxAgeDays = 7
     )
 

@@ -1,35 +1,60 @@
 function Initialize-Log {
     <#
     .SYNOPSIS
-        Initializes the log file path and writes a structured start banner.
+        Initializes the module log path and writes a structured session-start banner.
 
     .DESCRIPTION
-        Call Initialize-Log once at script start. It stores the log file path in module
-        scope so all subsequent Write-Log calls resolve the path automatically.
-        Also runs the platform context adapter (Get-PlatformContext) once for the banner.
+        Call Initialize-Log once at the start of a script or session. It stores the
+        resolved log file path in module scope so all subsequent Write-Log calls can
+        find it without an explicit -Logfile argument.
 
-        Calling Initialize-Log a second time (e.g., when switching to a new log file)
-        resets the auto-cleanup guard so the new log tree gets cleaned.
+        Log path resolution order (first non-empty wins):
+          1. -LogFilePath parameter passed to this call.
+          2. $LogFilePath in the caller's scope (dot-source back-compat).
+          3. $Global:LogFilePath (legacy global fallback via Resolve-WitnessLogPath).
+
+        After resolving the path, Initialize-Log writes a fixed session-start banner
+        directly to the log file, bypassing the Verbose/Debug gate. The banner records
+        who is running, on what host, under which identity, and where the log lives.
+        This context must always be present in the file regardless of gate settings.
+
+        Calling Initialize-Log a second time (e.g., when switching log targets mid-script)
+        resets the auto-cleanup sentinel so the new log directory gets exactly one cleanup
+        pass during that session.
 
     .PARAMETER LogFilePath
-        Full path to the log file. If omitted, reads $LogFilePath from the caller's scope
-        or $Global:LogFilePath (back-compat).
+        Full path to the log file. When omitted, the caller-scope and global fallbacks
+        are checked before throwing. The parent directory is created if missing.
 
     .PARAMETER ScriptName
-        Name of the calling script. Auto-detected from the call stack if not provided.
+        Name of the calling script included in the start banner. Auto-detected from
+        the call stack when not supplied.
 
     .PARAMETER Version
-        Version string to include in the start banner.
+        Version string written to the banner VERSION line.
+
+    .OUTPUTS
+        None. Side effect: sets $script:WitnessLogFilePath and writes the banner.
 
     .EXAMPLE
-        Initialize-Log -LogFilePath "C:\Logs\MyScript_20260601.log" -ScriptName "MyScript" -Version "1.0"
+        Initialize-Log -LogFilePath 'C:\Logs\Deploy_20260601.log' -ScriptName 'Deploy' -Version '2.1.0'
+
+        Standard call: explicit path, name, and version. All subsequent Write-Log calls
+        in the session use this path automatically.
+
+    .EXAMPLE
+        $LogFilePath = Join-Path $env:TEMP "MyScript_$(Get-Date -Format 'yyyyMMdd').log"
+        Initialize-Log -ScriptName 'MyScript' -Version '1.0'
+
+        Dot-source back-compat pattern: set $LogFilePath in caller scope before calling
+        Initialize-Log without -LogFilePath.
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    11/08/2022 9:30 AM                              -
         =  Author:        Curtis Leggett                                  =
         -  Copyright:     2022 Synapse Co.                                -
-        =  Organization:  Divergent Cortex                                =
+        =  Organization:  Divergent Cortex                                -
         -  Version:       2024.01.15.004                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
@@ -38,17 +63,20 @@ function Initialize-Log {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
+    [OutputType([void])]
     param (
         [Parameter(Mandatory = $false)]
         [string]$LogFilePath,
 
+        [Parameter(Mandatory = $false)]
         [string]$ScriptName,
 
+        [Parameter(Mandatory = $false)]
         [string]$Version
     )
 
-    # layer 1: explicit param wins; layer 2: caller scope for scripts that set $LogFilePath directly
-    # layers 3+ delegated to Resolve-WitnessLogPath
+    # Layer 1: explicit param wins; layer 2: caller-scope for dot-source back-compat.
+    # Layers 3+ delegated to Resolve-WitnessLogPath.
     $callerCandidate = $null
     if ($PSBoundParameters.ContainsKey('LogFilePath') -and -not [string]::IsNullOrWhiteSpace($LogFilePath)) {
         $callerCandidate = $LogFilePath
@@ -67,42 +95,91 @@ function Initialize-Log {
 
     $script:WitnessLogFilePath = $LogFilePath
 
-    # each Initialize-Log call is a new session -- reset so cleanup fires once for the new log tree
+    # Each Initialize-Log call represents a new session context -- reset sentinel so
+    # the new log directory gets exactly one cleanup pass.
     $script:WitnessCleanupRan = $false
 
-    # call stack gives us the filename of whatever sourced Initialize-Log
+    # Auto-detect script name from the call stack when not supplied.
     if ([string]::IsNullOrWhiteSpace($ScriptName)) {
         try {
             $callStack = Get-PSCallStack
             if ($callStack.Count -gt 1) {
                 $ScriptName = $callStack[1].ScriptName | Split-Path -Leaf
             }
-            if ([string]::IsNullOrWhiteSpace($ScriptName)) {
-                $ScriptName = 'Unknown Script' 
-            }
+            if ([string]::IsNullOrWhiteSpace($ScriptName)) { $ScriptName = 'Unknown Script' }
         }
         catch {
             $ScriptName = 'Unknown Script'
         }
     }
 
-    # local variable only -- $script:WitnessContext was dead state never read after this returns
     $ctx = Get-PlatformContext
 
-    # start banner -- everything debug so it only shows when debug output is on
-    Write-Log -Message '===============================================================================' -Severity Verbose
-    Write-Log -Message "SCRIPT START: $ScriptName" -Severity Debug
-    Write-Log -Message "TIME:         $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Severity Debug
-    Write-Log -Message "IDENTITY:     $($ctx.IdentityName)" -Severity Debug
-    Write-Log -Message "CONTEXT:      $(if ($ctx.IsSystem) { 'SYSTEM' } else { 'USER' }), Admin=$($ctx.IsAdmin)" -Severity Debug
-    Write-Log -Message "PLATFORM:     $($ctx.Platform)" -Severity Debug
-    Write-Log -Message "ENV USER:     $($ctx.UserDomainName)\$($ctx.UserName)" -Severity Debug
-    if ($ctx.InteractiveUser) {
-        Write-Log -Message "INTERACTIVE:  $($ctx.InteractiveUser)" -Severity Debug
+    # Ensure the log directory exists before writing the banner.
+    $logDir = Split-Path $LogFilePath
+    if ($logDir -and !(Test-Path $logDir)) {
+        New-Item -Path $logDir -ItemType Directory -Force | Out-Null
     }
-    Write-Log -Message "HOST:         $($ctx.HostName)" -Severity Debug
-    Write-Log -Message "PID:          $($ctx.ProcessId)" -Severity Debug
-    Write-Log -Message "LOG:          $LogFilePath" -Severity Debug
-    Write-Log -Message "VERSION:      $Version" -Severity Debug
-    Write-Log -Message '===============================================================================' -Severity Verbose
+
+    # Build banner lines as CMTrace entries. These are written directly to the file
+    # rather than through Write-Log so they always appear regardless of the
+    # Verbose/Debug gate settings. The banner is session context, not a diagnostic
+    # message -- it must always be recorded.
+    $now = Get-Date
+    $LogDate = $now.ToString('MM-dd-yyyy')
+    $LogTime = $now.ToString('HH:mm:ss.fff')
+
+    if ($script:WitnessIsWindows) {
+        $contextUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    }
+    else {
+        $contextUser = "$([System.Environment]::UserDomainName)\$([System.Environment]::UserName)"
+    }
+
+    # type=1 (Info) so CMTrace renders banner lines in the normal color.
+    $bannerLines = @(
+        "===============================================================================",
+        "SCRIPT START: $ScriptName",
+        "TIME:         $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')",
+        "IDENTITY:     $($ctx.IdentityName)",
+        "CONTEXT:      $(if ($ctx.IsSystem) { 'SYSTEM' } else { 'USER' }), Admin=$($ctx.IsAdmin)",
+        "PLATFORM:     $($ctx.Platform)",
+        "ENV USER:     $($ctx.UserDomainName)\$($ctx.UserName)",
+        "HOST:         $($ctx.HostName)",
+        "PID:          $($ctx.ProcessId)",
+        "LOG:          $LogFilePath",
+        "VERSION:      $Version",
+        "==============================================================================="
+    )
+
+    $fileStream = $null
+    $streamWriter = $null
+    try {
+        $fileMode = [System.IO.FileMode]::Append
+        $fileAccess = [System.IO.FileAccess]::Write
+        $fileShare = [System.IO.FileShare]::ReadWrite
+
+        $fileStream = New-Object System.IO.FileStream($LogFilePath, $fileMode, $fileAccess, $fileShare)
+        $streamWriter = New-Object System.IO.StreamWriter($fileStream)
+        $streamWriter.NewLine = [System.Environment]::NewLine
+
+        foreach ($line in $bannerLines) {
+            $entry = "<![LOG[$line]LOG]!>" +
+                "<time=`"$LogTime`" " +
+                "date=`"$LogDate`" " +
+                "component=`"Initialize-Log`" " +
+                "context=`"$contextUser`" " +
+                "type=`"1`" " +
+                "thread=`"$PID`" " +
+                "file=`"Initialize-Log.ps1`">"
+            $streamWriter.WriteLine($entry)
+        }
+    }
+    catch {
+        Write-Warning "Initialize-Log: Failed to write banner to '$LogFilePath': $_"
+    }
+    finally {
+        if ($null -ne $streamWriter) { $streamWriter.Close() }
+        if ($null -ne $fileStream) { $fileStream.Close() }
+    }
 }
