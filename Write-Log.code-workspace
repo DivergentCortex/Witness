@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../General_Scripts"
+		}
+	],
+	"settings": {
+		"powershell.cwd": "Write-Log"
+	}
+}
