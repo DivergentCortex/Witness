@@ -25,10 +25,15 @@ function Write-LogFinal {
         Write-LogFinal -Message "Script completed." -Severity Success
 
     .NOTES
-        =========================================
-        Curtis Leggett & S.Henry
-        Divergent Cortex
-        =========================================
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        - Created on:   4/23/2023 2:15 PM   -
+        = Author:       Curtis Leggett      =
+        - Copyright:    2026 Synapse Co.    -
+        = Organization: Divergent Cortex    =
+        - Version:      2026.03.24.010      -
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        Divergent Tools are built to survive in hostile environments. 
+        * Does not include marriages, children, or pets, or vocanoes.
     #>
     [CmdletBinding()]
     Param(
