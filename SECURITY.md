@@ -9,7 +9,7 @@ it privately rather than opening a public issue.
 On the repository page, go to Security > Advisories > Report a vulnerability.
 This keeps the details confidential until a fix is ready.
 
-**Alternate contact:** Reach the maintainer at curtis.leggett.ltr@gmail.com
+**Alternate contact:** Reach the maintainer at societary.shelter@gmail.com
 with "SECURITY: DivergentCortex.Witness" in the subject line.
 
 Please include a description of the issue, steps to reproduce, and the
