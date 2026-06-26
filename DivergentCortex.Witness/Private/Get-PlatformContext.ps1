@@ -66,10 +66,7 @@ function Get-PlatformContext {
         )
     }
     else {
-        # [System.Environment]::IsPrivilegedProcess requires .NET 7+ (PS 7.4+).
-        # On PS 7.2/7.3 (.NET 6) the property does not exist and access throws
-        # MissingMemberException. Catch only that specific exception so unrelated
-        # fatal errors are not swallowed, then fall through to the id -u fallback.
+        # needs .NET 7+, missing on older builds
         $isAdmin = $false
         $privilegedProcessChecked = $false
         try {
@@ -77,8 +74,6 @@ function Get-PlatformContext {
             $privilegedProcessChecked = $true
         }
         catch [System.Management.Automation.RuntimeException] {
-            # RuntimeException wraps MissingMemberException thrown when the
-            # property does not exist on this .NET version.
             $privilegedProcessChecked = $false
         }
         catch [System.MissingMemberException] {
@@ -117,8 +112,7 @@ function Get-PlatformContext {
         }
     }
     else {
-        # loginctl only exists on Linux (systemd); skip it on macOS to avoid
-        # CommandNotFoundException being silently swallowed.
+        # loginctl doesnt exist on macOS
         if ($platformStr -ne 'macOS') {
             try {
                 $raw = loginctl list-sessions --no-legend 2>$null
