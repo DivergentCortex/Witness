@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026.06.25.027] - 2026-06-25
+### chore(DivergentCortex.Witness): scrub inline comments to doctrine voice across four module files
+
+What changed:
+- Deleted all # ---- Section Name ---- banner headers from Get-PlatformContext.ps1, Write-Log.ps1, Initialize-Log.ps1, and Write-LogFinal.ps1 (~29 banners total)
+- Rewrote substantive comments in doctrine voice: lowercase, terse, informal, 3-8 words, no punctuation except where load-bearing
+- Stripped all Fix [N] and Fix [RN] changelog references from inline comments -- useful constraint context was preserved, the ticket tags were dropped
+- Inline comments that restated the code were deleted; comments explaining non-obvious WHY (compat constraints, impersonation timing, recursion guards, platform gaps) were kept and reworded
+- CBH blocks (.SYNOPSIS/.DESCRIPTION/.PARAMETER/.EXAMPLE/.NOTES) were not touched
+
+Why:
+- Comments matched the AI-signature pattern the doctrine explicitly flags: banner headers every few lines, tutorial-style step markers, Fix reference tags that belong in the changelog not source, and formal prose voice. The rewrite brings all four files to the standard defined in ps_script_identity_doctrine.md -- comments explain why not what, written like a coworker note not a manual.
+
+
 ## [2026.06.25.026] - 2026-06-25
 ### docs: Spread .NOTES Created/Version/Copyright dates across functions
 
