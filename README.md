@@ -132,6 +132,6 @@ On Linux and macOS where CMTrace is not available, the files are still human-rea
 
 ## License
 
-MIT. Copyright (c) 2023-2026 Curtis Leggett. See [LICENSE](LICENSE).
+MIT. Copyright (c) 2023-2026 Divergent Cortex. See [LICENSE](LICENSE).
 
 DivergentCortex.Witness is part of the [DivergentCortex](https://github.com/DivergentCortex) module line.
