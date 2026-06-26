@@ -135,9 +135,17 @@ On Windows, if the current working directory is on a ConfigMgr `CMSite` PSDrive 
 
 ## The donor relationship
 
-The original `Write-Log.ps1` lives at `donor-code/Write-Log.ps1` and is read-only. It is never edited. It serves as the behavioral specification: four years of hardening in production SCCM deployments. The module re-implements its behavior with the platform adapter layered in, but the donor defines what "correct" looks like for CMTrace format, severity handling, console output, rotation, cleanup, and caller detection.
+The original `Write-Log.ps1` lives at `donor-code/Write-Log.ps1` and is read-only. It is never edited. It serves as the behavioral reference: four years of hardening in production SCCM deployments. The module re-implements its logic with a modular structure and a cross-platform adapter layered in.
 
 Public function names (`Write-Log`, `Initialize-Log`, `Write-LogFinal`) are preserved unchanged. Existing consumer scripts work without modification when switching from the dot-sourced donor to the module import.
+
+### Intentional divergences from the donor
+
+The module does not claim identical behavior to the donor. The following are deliberate design decisions, not bugs:
+
+- **Debug and Verbose default OFF.** The donor emitted Verbose and Debug output by default. The module defaults both to suppressed on all surfaces. Consumers opt in via `$Global:DebugLogfile`, `$Global:VerboseLogfile`, or the native `-Debug`/`-Verbose` preference mechanism. This matches standard PowerShell cmdlet behavior.
+- **Local-time timestamps, no UTC offset.** The donor appended a UTC offset in minutes to the `time=` field. The module uses `HH:mm:ss.fff` with no offset suffix. Operators read logs in local time; the offset adds noise and complicates visual scanning across log files.
+- **Native -Debug/-Verbose support.** The module honors `$DebugPreference` and `$VerbosePreference` set by the PowerShell runtime when a caller or ancestor function is invoked with `-Debug` or `-Verbose`. The donor had no such mechanism.
 
 ## Native debug/verbose preference gate
 

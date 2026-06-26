@@ -111,6 +111,16 @@ function Initialize-Log {
 
     $ctx = Get-PlatformContext
 
+    # CMSite PSDrive breaks filesystem ops - same guard as Write-Log uses
+    $originalLocation = Get-Location
+    $isSCCMDrive = $false
+    if ($script:WitnessIsWindows) {
+        if ($null -ne $originalLocation.Provider -and $originalLocation.Provider.Name -eq 'CMSite') {
+            $isSCCMDrive = $true
+            Set-Location C:
+        }
+    }
+
     $logDir = Split-Path $LogFilePath
     if ($logDir -and !(Test-Path $logDir)) {
         New-Item -Path $logDir -ItemType Directory -Force | Out-Null
@@ -136,6 +146,8 @@ function Initialize-Log {
         "CONTEXT:      $(if ($ctx.IsSystem) { 'SYSTEM' } else { 'USER' }), Admin=$($ctx.IsAdmin)",
         "PLATFORM:     $($ctx.Platform)",
         "ENV USER:     $($ctx.UserDomainName)\$($ctx.UserName)",
+        "INTERACTIVE:  $($ctx.InteractiveUser)",
+        "SESSION:      $($ctx.SessionType)",
         "HOST:         $($ctx.HostName)",
         "PID:          $($ctx.ProcessId)",
         "LOG:          $LogFilePath",
@@ -149,9 +161,10 @@ function Initialize-Log {
         $fileMode = [System.IO.FileMode]::Append
         $fileAccess = [System.IO.FileAccess]::Write
         $fileShare = [System.IO.FileShare]::ReadWrite
+        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
         $fileStream = New-Object System.IO.FileStream($LogFilePath, $fileMode, $fileAccess, $fileShare)
-        $streamWriter = New-Object System.IO.StreamWriter($fileStream)
+        $streamWriter = New-Object System.IO.StreamWriter($fileStream, $utf8NoBom)
         $streamWriter.NewLine = [System.Environment]::NewLine
 
         foreach ($line in $bannerLines) {
@@ -170,7 +183,15 @@ function Initialize-Log {
         Write-Warning "Initialize-Log: Failed to write banner to '$LogFilePath': $_"
     }
     finally {
-        if ($null -ne $streamWriter) { $streamWriter.Close() }
-        if ($null -ne $fileStream) { $fileStream.Close() }
+        try { if ($null -ne $streamWriter) { $streamWriter.Dispose() } } catch { }
+        try { if ($null -ne $fileStream)   { $fileStream.Dispose()   } } catch { }
+        if ($isSCCMDrive) {
+            try {
+                Set-Location $originalLocation -ErrorAction SilentlyContinue
+            }
+            catch {
+                Write-Warning "Initialize-Log: Could not restore CMSite location: $_"
+            }
+        }
     }
 }

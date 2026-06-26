@@ -48,6 +48,10 @@ function Write-Log {
         Verbose, Debug, Success. Information is normalized to Info at runtime.
         Default: Info.
 
+        Success is a console-only distinction: it produces a green-labeled console line
+        but writes type 1 (Info) to the log file. CMTrace has no native Success type;
+        file consumers see Success entries as Info.
+
     .PARAMETER Component
         Source component label written to the CMTrace component= field. Auto-detected
         from the PowerShell call stack when not supplied.
@@ -255,7 +259,7 @@ function Write-Log {
             }
 
             if ([string]::IsNullOrEmpty($Component)) {
-                if ($callerFunctionName -ne 'Unknown' -and $callerFunctionName -notlike '*ps1') {
+                if ($callerFunctionName -ne 'Unknown' -and $callerFunctionName -notlike '*.ps1') {
                     $Component = $callerFunctionName
                 }
                 else {
@@ -359,24 +363,33 @@ function Write-Log {
                         $rotNum++
                     } while (Test-Path $archivePath)
 
+                    $renamed = $false
                     try {
-                        Rename-Item -Path $resolvedLogfile -NewName $archiveName -Force
+                        Rename-Item -Path $resolvedLogfile -NewName $archiveName -Force -ErrorAction Stop
+                        $renamed = $true
                     }
                     catch {
                         Write-Warning "Write-Log: Could not rotate log to '$archiveName': $_"
                     }
 
-                    $rotationMsg = "<![LOG[LOG ROTATION: Previous log archived to $archiveName (exceeded ${maxSizeMB}MB)]LOG]!>" +
-                        "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
-                        "context=`"$contextUser`" " +
-                        "type=`"1`" thread=`"$PID`" file=`"Write-Log.ps1`">"
+                    # Only write the rotation notice (which creates a new file via WriteAllText
+                    # truncate/create mode) when the rename SUCCEEDED. If the rename failed
+                    # (e.g. SCCM/CMTrace holds the file open), skip the WriteAllText so the
+                    # original log keeps appending and NO data is lost.
+                    if ($renamed) {
+                        $rotationMsg = "<![LOG[LOG ROTATION: Previous log archived to $archiveName (exceeded ${maxSizeMB}MB)]LOG]!>" +
+                            "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
+                            "context=`"$contextUser`" " +
+                            "type=`"1`" thread=`"$PID`" file=`"Write-Log.ps1`">"
 
-                    # cant use Write-Log here, file may not exist yet
-                    try {
-                        [System.IO.File]::WriteAllText($resolvedLogfile, "$rotationMsg$([System.Environment]::NewLine)")
-                    }
-                    catch {
-                        Write-Warning "Write-Log: Failed to write rotation notice to '$resolvedLogfile': $_"
+                        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+                        # cant use Write-Log here, file may not exist yet
+                        try {
+                            [System.IO.File]::WriteAllText($resolvedLogfile, "$rotationMsg$([System.Environment]::NewLine)", $utf8NoBom)
+                        }
+                        catch {
+                            Write-Warning "Write-Log: Failed to write rotation notice to '$resolvedLogfile': $_"
+                        }
                     }
                 }
             }
@@ -408,9 +421,10 @@ function Write-Log {
                         $fileMode = [System.IO.FileMode]::Append
                         $fileAccess = [System.IO.FileAccess]::Write
                         $fileShare = [System.IO.FileShare]::ReadWrite
+                        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
                         $fileStream = New-Object System.IO.FileStream($resolvedLogfile, $fileMode, $fileAccess, $fileShare)
-                        $streamWriter = New-Object System.IO.StreamWriter($fileStream)
+                        $streamWriter = New-Object System.IO.StreamWriter($fileStream, $utf8NoBom)
                         $streamWriter.NewLine = [System.Environment]::NewLine
                         $streamWriter.WriteLine($logline)
                         $writeSucceeded = $true
@@ -437,8 +451,8 @@ function Write-Log {
                         break
                     }
                     finally {
-                        if ($null -ne $streamWriter) { $streamWriter.Close() }
-                        if ($null -ne $fileStream) { $fileStream.Close() }
+                        try { if ($null -ne $streamWriter) { $streamWriter.Dispose() } } catch { }
+                        try { if ($null -ne $fileStream)   { $fileStream.Dispose()   } } catch { }
                     }
                 }
             }
