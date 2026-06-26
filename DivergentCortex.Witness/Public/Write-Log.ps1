@@ -1,10 +1,6 @@
-# PSScriptAnalyzer suppressions - justified at function level:
-# PSAvoidOverwritingBuiltInCmdlets: Write-Log is the deliberate public name of this module.
-#   The "built-in" is Windows-only and not present on Linux/macOS; suppression is correct here.
-# PSAvoidGlobalVars: $Global:* vars are a documented back-compat surface for consumers that
-#   set these before dot-sourcing or importing. Not accidental global use.
-# PSAvoidUsingWriteHost: color-coded severity output is the explicit console feature of this
-#   function. Write-Output cannot produce color; Write-Host is correct here.
+# PSAvoidOverwritingBuiltInCmdlets suppressed, Write-Log is the modules public name
+# PSAvoidGlobalVars suppressed, documented back-compat surface
+# PSAvoidUsingWriteHost suppressed, color output needs Write-Host
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidOverwritingBuiltInCmdlets', '')]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
@@ -141,8 +137,6 @@ function Write-Log {
     )
 
     process {
-        # Layer 1: explicit param wins; layer 2: caller-scope for dot-source back-compat.
-        # Layers 3+ delegated to Resolve-WitnessLogPath.
         $callerCandidate = $null
         if ($PSBoundParameters.ContainsKey('Logfile') -and -not [string]::IsNullOrWhiteSpace($Logfile)) {
             $callerCandidate = $Logfile
@@ -159,8 +153,6 @@ function Write-Log {
             throw "FATAL: No log file path set. Call Initialize-Log -LogFilePath first, or set `$LogFilePath in your script scope before calling Write-Log."
         }
 
-        # Module-scope defaults; $Global: overrides honored for back-compat with
-        # consumers that set these before importing the module.
         $autoCleanup = $script:WitnessAutoCleanup
         if (Test-Path Variable:Global:WriteLogAutoCleanup) { $autoCleanup = $Global:WriteLogAutoCleanup }
 
@@ -182,14 +174,12 @@ function Write-Log {
         $debugToLogfile = $script:WitnessDebugLogfile
         if (Test-Path Variable:Global:DebugLogfile) { $debugToLogfile = $Global:DebugLogfile }
 
-        # Normalize alias before the severity gate below.
         if ($Severity -eq 'Information') { $Severity = 'Info' }
 
-        # Early exit when both sinks are off for this severity level.
         if ($Severity -eq 'Verbose' -and (-not $verboseToConsole) -and (-not $verboseToLogfile)) { return }
         if ($Severity -eq 'Debug' -and (-not $debugToConsole) -and (-not $debugToLogfile)) { return }
 
-        # SCCM CMSite provider breaks filesystem ops -- escape to C: first.
+        # CMSite provider breaks filesystem ops
         $originalLocation = Get-Location
         $isSCCMDrive = $false
         if ($script:WitnessIsWindows) {
@@ -200,7 +190,6 @@ function Write-Log {
         }
 
         try {
-            # Walk the call stack to find the immediate caller.
             $callStack = Get-PSCallStack
             $Source = 'Unknown'
             $callerFunctionName = 'Unknown'
@@ -218,7 +207,6 @@ function Write-Log {
                 }
             }
 
-            # Resolve component: explicit param > caller function name > caller-scope $Component.
             if ([string]::IsNullOrEmpty($Component)) {
                 if ($callerFunctionName -ne 'Unknown' -and $callerFunctionName -notlike '*ps1') {
                     $Component = $callerFunctionName
@@ -240,21 +228,19 @@ function Write-Log {
                 if ([string]::IsNullOrEmpty($Component)) { $Component = 'Unknown' }
             }
 
-            # Local time intentionally -- UTC offsets confuse operators scanning logs.
+            # local time, utc confuses operators
             $DateTime = Get-Date
             $LogDate = $DateTime.ToString('MM-dd-yyyy')
             $LogTime = $DateTime.ToString('HH:mm:ss.fff')
 
-            # CMTrace reads type= as an integer code, not a string label.
+            # cmtrace expects integer type codes
             $severityType = '1'
             if ($Severity -eq 'Error') { $severityType = '3' }
             elseif ($Severity -eq 'Warning') { $severityType = '2' }
             elseif ($Severity -eq 'Verbose') { $severityType = '4' }
             elseif ($Severity -eq 'Debug') { $severityType = '5' }
-            # Info and Success both map to type 1.
 
-            # Resolved per write so impersonation changes mid-session are captured.
-            # Non-Windows skips loginctl/who for this -- too expensive per line.
+            # re-resolve per write for impersonation changes
             if ($script:WitnessIsWindows) {
                 $contextUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
             }
@@ -262,7 +248,6 @@ function Write-Log {
                 $contextUser = "$([System.Environment]::UserDomainName)\$([System.Environment]::UserName)"
             }
 
-            # CMTrace envelope -- field order is locked by the format contract.
             $logline = "<![LOG[$Message]LOG]!>" +
                 "<time=`"$LogTime`" " +
                 "date=`"$LogDate`" " +
@@ -272,14 +257,11 @@ function Write-Log {
                 "thread=`"$PID`" " +
                 "file=`"$Source`">"
 
-            # Ensure the log directory exists before the first write.
             $logDir = Split-Path $resolvedLogfile
             if ($logDir -and !(Test-Path $logDir)) {
                 New-Item -Path $logDir -ItemType Directory -Force | Out-Null
             }
 
-            # Console and logfile gates are independent: verbose/debug can be silenced on
-            # one surface while remaining active on the other.
             $shouldWriteConsole = $true
             if ($Severity -eq 'Verbose') { $shouldWriteConsole = $verboseToConsole }
             elseif ($Severity -eq 'Debug') { $shouldWriteConsole = $debugToConsole }
@@ -317,7 +299,6 @@ function Write-Log {
             if ($Severity -eq 'Verbose') { $shouldWriteLogfile = $verboseToLogfile }
             elseif ($Severity -eq 'Debug') { $shouldWriteLogfile = $debugToLogfile }
 
-            # Size-based rotation: rename current file before starting a new one.
             if ($shouldWriteLogfile -and (Test-Path $resolvedLogfile)) {
                 $currentSize = (Get-Item $resolvedLogfile).Length / 1MB
                 if ($currentSize -ge $maxSizeMB) {
@@ -335,8 +316,6 @@ function Write-Log {
                         Rename-Item -Path $resolvedLogfile -NewName $archiveName -Force
                     }
                     catch {
-                        # Rotation rename failed -- log continues to the oversized file rather
-                        # than losing the entry. The next write will re-evaluate size.
                         Write-Warning "Write-Log: Could not rotate log to '$archiveName': $_"
                     }
 
@@ -345,7 +324,7 @@ function Write-Log {
                         "context=`"$contextUser`" " +
                         "type=`"1`" thread=`"$PID`" file=`"Write-Log.ps1`">"
 
-                    # Cannot call Write-Log here -- new file may not exist yet.
+                    # cant use Write-Log here, file may not exist yet
                     try {
                         [System.IO.File]::WriteAllText($resolvedLogfile, "$rotationMsg$([System.Environment]::NewLine)")
                     }
@@ -355,8 +334,7 @@ function Write-Log {
                 }
             }
 
-            # Auto-cleanup runs once per session. Sentinel is set before the call to
-            # prevent recursion (Clear-LogFile calls Write-Log internally).
+            # sentinel before call prevents recursion
             if ($autoCleanup -and (-not $script:WitnessCleanupRan) -and (Test-Path $resolvedLogfile)) {
                 $script:WitnessCleanupRan = $true
                 $logFolder = Split-Path $resolvedLogfile
@@ -370,7 +348,7 @@ function Write-Log {
                 }
             }
 
-            # FileStream with ReadWrite share allows concurrent readers while writing.
+            # readwrite share so concurrent readers arent blocked
             if ($shouldWriteLogfile) {
                 $retryCount = 0
                 $writeSucceeded = $false
@@ -424,8 +402,6 @@ function Write-Log {
                     Set-Location $originalLocation -ErrorAction SilentlyContinue
                 }
                 catch {
-                    # Location restore after CMSite escape failed -- non-fatal, working
-                    # directory may remain at C: for the rest of the pipeline call.
                     Write-Warning "Write-Log: Could not restore CMSite location: $_"
                 }
             }
