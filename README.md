@@ -8,10 +8,6 @@
 
 ---
 
-Something breaks at 2am. Most scripts tell you "an error occurred." Witness tells you the script, the function, and the exact line number it died on, automatically, because it reads the call stack itself. You tag nothing.
-
-You wire the log calls into your script where things happen, and Witness turns them into something you can actually use:
-
 - Color-coded console output, live. Severity at a glance, success green, warning yellow, error red. You watch what is happening as it runs instead of squinting at a wall of white text.
 - Every line knows where it came from, the function and line that wrote it, stamped in automatically.
 - When it fails, it points at the exact spot. That is the difference between debugging for an hour and fixing it in a minute.
