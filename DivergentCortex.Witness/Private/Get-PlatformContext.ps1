@@ -25,7 +25,7 @@ function Get-PlatformContext {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    9/04/2025 3:50 PM                               -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2025 Synapse Co.                                -
+        -  Copyright:     2025 Divergent Cortex                           -
         =  Organization:  Divergent Cortex                                -
         -  Version:       2026.06.12.002                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=

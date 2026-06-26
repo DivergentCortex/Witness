@@ -34,7 +34,7 @@ function Resolve-WitnessLogPath {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    6/18/2026 11:15 AM                              -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Synapse Co.                                -
+        -  Copyright:     2026 Divergent Cortex                           -
         =  Organization:  Divergent Cortex                                -
         -  Version:       2026.06.18.001                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=

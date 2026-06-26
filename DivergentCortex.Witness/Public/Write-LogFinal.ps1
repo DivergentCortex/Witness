@@ -45,7 +45,7 @@ function Write-LogFinal {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    3/19/2024 1:20 PM                               -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2024 Synapse Co.                                -
+        -  Copyright:     2024 Divergent Cortex                           -
         =  Organization:  Divergent Cortex                                -
         -  Version:       2024.09.30.003                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=

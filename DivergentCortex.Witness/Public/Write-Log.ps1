@@ -95,7 +95,7 @@ function Write-Log {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         -  Created on:    4/23/2023 2:15 PM                               -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2023 Synapse Co.                                -
+        -  Copyright:     2023 Divergent Cortex                           -
         =  Organization:  Divergent Cortex                                =
         -  Version:       2026.06.25.010                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
