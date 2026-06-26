@@ -94,10 +94,8 @@ function Write-Log {
         [System.ConsoleColor]$Color
     )
 
-    # ---- Resolve log file path (Fix [1/3]) ----
-    # Layer 1: explicit -Logfile parameter
-    # Layer 2: caller's own scope (restores dot-source-era $LogFilePath = '...' pattern)
-    # Layers 3+: module-scope and global (delegated to Resolve-WitnessLogPath)
+    # layer 1: explicit param wins; layer 2: caller scope preserves dot-source-era compat
+    # layers 3+ delegated to Resolve-WitnessLogPath
     $callerCandidate = $null
     if ($PSBoundParameters.ContainsKey('Logfile') -and -not [string]::IsNullOrWhiteSpace($Logfile)) {
         $callerCandidate = $Logfile
@@ -114,8 +112,7 @@ function Write-Log {
         throw "FATAL: No log file path set. Call Initialize-Log -LogFilePath first, or set `$LogFilePath in your script scope before calling Write-Log."
     }
 
-    # ---- Config (Fix [13]) ----
-    # Module-scope defaults; global overrides honored for back-compat.
+    # module-scope defaults; global overrides honored for back-compat
     $autoCleanup = $script:WitnessAutoCleanup
     if (Test-Path Variable:Global:WriteLogAutoCleanup) {
         $autoCleanup = $Global:WriteLogAutoCleanup 
@@ -151,12 +148,12 @@ function Write-Log {
         $debugToLogfile = $Global:DebugLogfile 
     }
 
-    # Map "Information" to "Info"
+    # normalize alias before the if-chain below
     if ($Severity -eq 'Information') {
         $Severity = 'Info' 
     }
 
-    # Early return if both outputs disabled for this severity
+    # nothing to do if both sinks are off for this severity
     if ($Severity -eq 'Verbose' -and (-not $verboseToConsole) -and (-not $verboseToLogfile)) {
         return 
     }
@@ -164,7 +161,7 @@ function Write-Log {
         return 
     }
 
-    # ---- SCCM drive detection (Windows only) ----
+    # SCCM CMSite provider breaks filesystem ops -- escape to C: first
     $originalLocation = Get-Location
     $isSCCMDrive = $false
     if ($script:WitnessIsWindows) {
@@ -175,7 +172,7 @@ function Write-Log {
     }
 
     try {
-        # ---- Caller detection ----
+        # walk the call stack to find who called us
         $callStack = Get-PSCallStack
         $Source = 'Unknown'
         $callerFunctionName = 'Unknown'
@@ -201,8 +198,7 @@ function Write-Log {
             }
         }
 
-        # ---- Component resolution ----
-        # Also checks caller-scope $Component via SessionState for back-compat (Fix [3]).
+        # also checks caller-scope $Component via SessionState for dot-source back-compat
         if ([string]::IsNullOrEmpty($Component)) {
             if ($callerFunctionName -ne 'Unknown' -and $callerFunctionName -notlike '*ps1') {
                 $Component = $callerFunctionName
@@ -226,12 +222,12 @@ function Write-Log {
             }
         }
 
-        # ---- Timestamp (local time, no UTC offset - deliberate operator preference) ----
+        # local time intentionally -- UTC offsets confuse operators scanning logs
         $DateTime = Get-Date
         $LogDate = $DateTime.ToString('MM-dd-yyyy')
         $LogTime = $DateTime.ToString('HH:mm:ss.fff')
 
-        # ---- Severity -> CMTrace type numeric mapping ----
+        # CMTrace reads the type field as a number not a string
         $severityType = '1'
         if ($Severity -eq 'Error') {
             $severityType = '3' 
@@ -252,9 +248,8 @@ function Write-Log {
             $severityType = '5' 
         }
 
-        # ---- context= field resolved per write (Fix [4]) ----
-        # Donor-parity: WindowsIdentity per write on Windows (impersonation-correct).
-        # Non-Windows: cheap [Environment] API, no loginctl/who per line.
+        # per-write resolution so impersonation changes mid-script are captured
+        # non-windows skips loginctl/who -- too expensive per line
         if ($script:WitnessIsWindows) {
             $contextUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
         }
@@ -262,7 +257,7 @@ function Write-Log {
             $contextUser = "$([System.Environment]::UserDomainName)\$([System.Environment]::UserName)"
         }
 
-        # ---- Build CMTrace log line ----
+        # wire the CMTrace envelope around the message
         $logline = "<![LOG[$Message]LOG]!>" +
         "<time=`"$LogTime`" " +
         "date=`"$LogDate`" " +
@@ -272,13 +267,13 @@ function Write-Log {
         "thread=`"$PID`" " +
         "file=`"$Source`">"
 
-        # ---- Create log directory if needed ----
+        # make sure the directory exists before we try to write
         $logDir = Split-Path $Logfile
         if ($logDir -and !(Test-Path $logDir)) {
             New-Item -Path $logDir -ItemType Directory -Force | Out-Null
         }
 
-        # ---- Console output ----
+        # severity gates console visibility independently from logfile
         $shouldWriteConsole = $true
         if ($Severity -eq 'Verbose') {
             $shouldWriteConsole = $verboseToConsole 
@@ -321,7 +316,7 @@ function Write-Log {
             Write-Host "$Message" -ForegroundColor $finalMessageColor
         }
 
-        # ---- Logfile output ----
+        # same gate pattern for logfile -- verbose/debug can be independently silenced
         $shouldWriteLogfile = $true
         if ($Severity -eq 'Verbose') {
             $shouldWriteLogfile = $verboseToLogfile 
@@ -330,9 +325,7 @@ function Write-Log {
             $shouldWriteLogfile = $debugToLogfile 
         }
 
-        # ---- Size-based log rotation ----
-        # Fix [5]: rotation notice uses [System.Environment]::NewLine (\r\n Windows, \n Linux)
-        # so the first line of the new file matches the newline convention of subsequent writes.
+        # NewLine instead of literal \n so the rotation notice matches the platform newline convention
         if ($shouldWriteLogfile -and (Test-Path $Logfile)) {
             $currentSize = (Get-Item $Logfile).Length / 1MB
             if ($currentSize -ge $maxSizeMB) {
@@ -357,8 +350,7 @@ function Write-Log {
                 "context=`"$contextUser`" " +
                 "type=`"1`" thread=`"$PID`" file=`"Write-Log.ps1`">"
 
-                # Fix [R2]: surface rotation-write failure - an empty catch hides disk-full or perm errors.
-                # Cannot use Write-Log here (new file may not exist yet); Write-Warning reaches the stream.
+                # cannot use Write-Log here -- new file may not exist yet; Write-Warning reaches the stream
                 try {
                     [System.IO.File]::WriteAllText($Logfile, "$rotationMsg$([System.Environment]::NewLine)")
                 }
@@ -368,9 +360,9 @@ function Write-Log {
             }
         }
 
-        # ---- Auto-cleanup once per session (Fix [12]) ----
+        # cleanup runs once per session -- sentinel set before the call to block recursion
         if ($autoCleanup -and (-not $script:WitnessCleanupRan) -and (Test-Path $Logfile)) {
-            $script:WitnessCleanupRan = $true  # set BEFORE calling to prevent recursion
+            $script:WitnessCleanupRan = $true  # before the call -- Clear-LogFile calls Write-Log
             $logFolder = Split-Path $Logfile
             if ($logFolder -and (Test-Path $logFolder)) {
                 try {
@@ -382,7 +374,7 @@ function Write-Log {
             }
         }
 
-        # ---- Write to logfile with retry on lock ----
+        # FileStream with ReadWrite share allows concurrent readers while we write
         if ($shouldWriteLogfile) {
             $retryCount = 0
             $writeSucceeded = $false
@@ -402,7 +394,7 @@ function Write-Log {
                     $streamWriter.WriteLine($logline)
                     $writeSucceeded = $true
 
-                    # Contention notice on successful retry
+                    # tell the log that it had to fight for the lock
                     if ($retryCount -gt 0) {
                         $retryNote = "<![LOG[WRITE-LOG FILE CONTENTION: Previous entry required $retryCount retry attempt(s) due to file lock on $Logfile]LOG]!>" +
                         "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +

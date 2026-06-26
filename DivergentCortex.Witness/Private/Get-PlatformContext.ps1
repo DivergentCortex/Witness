@@ -37,8 +37,7 @@ function Get-PlatformContext {
     [CmdletBinding()]
     param()
 
-    # ---- Platform string (Fix [7]) ----
-    # $IsMacOS does not exist on PS 5.1; guard with Test-Path.
+    # $IsMacOS does not exist on PS 5.1; guard with Test-Path
     $platformStr = 'Linux'
     if ($script:WitnessIsWindows) {
         $platformStr = 'Windows'
@@ -47,12 +46,11 @@ function Get-PlatformContext {
         $platformStr = 'macOS'
     }
 
-    # ---- Process identity / username ----
-    # Windows: WindowsIdentity preserves AD domain + impersonation token.
-    # Non-Windows: [Environment]::UserDomainName returns hostname (documented gap, not a bug).
+    # windows: WindowsIdentity keeps AD domain + impersonation token intact
+    # non-windows: UserDomainName returns the hostname -- documented gap not a bug
     if ($script:WitnessIsWindows) {
         $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-        $identityName = $identity.Name  # SAM format: DOMAIN\user
+        $identityName = $identity.Name  # SAM format DOMAIN\user
         $logonType = if ($identity.AuthenticationType) {
             $identity.AuthenticationType 
         }
@@ -66,9 +64,8 @@ function Get-PlatformContext {
         $logonType = 'N/A'
     }
 
-    # ---- Elevation (Fix [8], Fix [10]) ----
-    # Branch on platform FIRST. id -u never runs on Windows.
-    # Fix [10]: reuse $identity already obtained above - no second GetCurrent() call.
+    # platform branch first -- id -u must never run on windows
+    # reuse $identity from above to avoid a second GetCurrent() call
     if ($script:WitnessIsWindows) {
         $principal = New-Object System.Security.Principal.WindowsPrincipal($identity)
         $isAdmin = $principal.IsInRole(
@@ -76,7 +73,7 @@ function Get-PlatformContext {
         )
     }
     else {
-        # IsPrivilegedProcess requires .NET 8+ (PS 7.4+). Fall back to id -u on older builds.
+        # IsPrivilegedProcess needs .NET 8+ so fall back to id -u on older builds
         try {
             $isAdmin = [System.Environment]::IsPrivilegedProcess
         }
@@ -91,19 +88,16 @@ function Get-PlatformContext {
         }
     }
 
-    # ---- SYSTEM-equivalent check (Windows only) ----
     $isSystem = $false
     if ($script:WitnessIsWindows) {
         $isSystem = $identityName -eq 'NT AUTHORITY\SYSTEM'
     }
 
-    # ---- Hostname ----
-    # [Environment]::MachineName is fully cross-platform per verified research.
+    # MachineName is cross-platform -- no platform branch needed here
     $hostName = [System.Environment]::MachineName
 
-    # ---- Interactive user (Fix [9]) ----
-    # Windows: find owner of explorer.exe (donor pattern; -IncludeUserName is Windows-only).
-    # Non-Windows: tiered approach per CROSS-PLATFORM.md Section 5.
+    # windows: explorer.exe owner is the interactive user (-IncludeUserName is windows-only)
+    # non-windows: tiered fallback -- loginctl then who then process owner
     $interactiveUser = $null
     if ($script:WitnessIsWindows) {
         try {
@@ -119,7 +113,7 @@ function Get-PlatformContext {
         }
     }
     else {
-        # Tier 1: loginctl (systemd) - graphical session detection
+        # tier 1: loginctl catches graphical sessions on systemd distros
         try {
             $raw = loginctl list-sessions --no-legend 2>$null
             if ($LASTEXITCODE -eq 0 -and $raw) {
@@ -143,7 +137,7 @@ function Get-PlatformContext {
         catch {
         }
 
-        # Tier 2: who(1), utmp-based, works on non-systemd distros
+        # tier 2: who is utmp-based and works on non-systemd distros
         if (-not $interactiveUser) {
             try {
                 $whoOutput = who 2>$null
@@ -158,15 +152,13 @@ function Get-PlatformContext {
             }
         }
 
-        # Tier 3: [Environment]::UserName - process owner, last resort (Fix [9])
+        # tier 3: process owner only -- could be a service account not a human
         if (-not $interactiveUser) {
             $interactiveUser = [System.Environment]::UserName
         }
     }
 
-    # ---- Session type (logon type equivalent) ----
-    # Windows: AuthenticationType from identity token (captured above).
-    # Non-Windows: layered SSH_CONNECTION > XDG_SESSION_TYPE > loginctl > isatty heuristic.
+    # non-windows: SSH_CONNECTION > XDG_SESSION_TYPE > loginctl > isatty -- each covers a gap the previous misses
     $sessionType = $logonType
     if (-not $script:WitnessIsWindows) {
         $sshConn = [System.Environment]::GetEnvironmentVariable('SSH_CONNECTION')
