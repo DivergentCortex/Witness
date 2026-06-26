@@ -3,6 +3,19 @@ function Clear-LogFile {
     .SYNOPSIS
         Removes log files older than a specified age from a folder.
 
+    .NOTES
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        -  Created on:    04/23/2023                                      -
+        =  Author:        Curtis Leggett                                  =
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
+        =-=-                       =-=-=-=-=-=-=-=                     -=-=
+        -       The witness is a ghost,                                   -
+        =                      yet, somewhere,                            =
+        -                             a file is remembering you.          -
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
     .DESCRIPTION
         Scans the target folder for *.log files whose LastWriteTime predates the
         MaxAgeDays cutoff and deletes them. Called automatically by Write-Log (once
@@ -23,19 +36,6 @@ function Clear-LogFile {
         Clear-LogFile -LogFolder 'C:\Logs' -MaxAgeDays 14
 
         Delete all *.log files in C:\Logs older than 14 days.
-
-    .NOTES
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    04/23/2023                                      -
-        =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                =
-        -  Version:       1.0.1                                           -
-        =-=-                       =-=-=-=-=-=-=-=                     -=-=
-        -       The witness is a ghost,                                   -
-        =                      yet, somewhere,                            =
-        -                             a file is remembering you.          -
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
     [OutputType([void])]

@@ -3,6 +3,19 @@ function Get-PlatformContext {
     .SYNOPSIS
         Returns a cross-platform identity and execution context object.
 
+    .NOTES
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        -  Created on:    04/23/2023                                      -
+        =  Author:        Curtis Leggett                                  =
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
+        =-=-                       =-=-=-=-=-=-=-=                     -=-=
+        -       The witness is a ghost,                                   -
+        =                      yet, somewhere,                            =
+        -                             a file is remembering you.          -
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
     .DESCRIPTION
         Detects the current platform (Windows/Linux/macOS), process identity,
         elevation status, interactive user, session type, and hostname. Called once
@@ -20,19 +33,6 @@ function Get-PlatformContext {
     .EXAMPLE
         $ctx = Get-PlatformContext
         Write-Host "Running on $($ctx.Platform) as $($ctx.IdentityName)"
-
-    .NOTES
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    04/23/2023                                      -
-        =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                =
-        -  Version:       1.0.1                                           -
-        =-=-                       =-=-=-=-=-=-=-=                     -=-=
-        -       The witness is a ghost,                                   -
-        =                      yet, somewhere,                            =
-        -                             a file is remembering you.          -
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]

@@ -1,11 +1,20 @@
-# PSAvoidGlobalVars suppressed, documented legacy fallback
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
-param()
-
 function Resolve-WitnessLogPath {
     <#
     .SYNOPSIS
         Resolves the active log file path using a deterministic layered lookup.
+
+    .NOTES
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        -  Created on:    04/23/2023                                      -
+        =  Author:        Curtis Leggett                                  =
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
+        =-=-                       =-=-=-=-=-=-=-=                     -=-=
+        -       The witness is a ghost,                                   -
+        =                      yet, somewhere,                            =
+        -                             a file is remembering you.          -
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
     .DESCRIPTION
         Shared by Write-Log and Write-LogFinal. Walks three resolution layers in order:
@@ -27,19 +36,6 @@ function Resolve-WitnessLogPath {
     .EXAMPLE
         $path = Resolve-WitnessLogPath -CallerResolved $userSuppliedPath
         if (-not $path) { throw 'No log path available.' }
-
-    .NOTES
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    04/23/2023                                      -
-        =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                =
-        -  Version:       1.0.1                                           -
-        =-=-                       =-=-=-=-=-=-=-=                     -=-=
-        -       The witness is a ghost,                                   -
-        =                      yet, somewhere,                            =
-        -                             a file is remembering you.          -
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
     [OutputType([System.String])]
