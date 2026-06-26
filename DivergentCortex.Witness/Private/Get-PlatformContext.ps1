@@ -22,15 +22,17 @@ function Get-PlatformContext {
         Write-Host "Running on $($ctx.Platform) as $($ctx.IdentityName)"
 
     .NOTES
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        - Created on:   4/23/2023 2:15 PM   -
-        = Author:       Curtis Leggett      =
-        - Copyright:    2026 Synapse Co.    -
-        = Organization: Divergent Cortex    =
-        - Version:      2026.03.24.010      -
-        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        Divergent Tools are built to survive in hostile environments. 
-        * Does not include marriages, children, or pets, or vocanoes.
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        -  Created on:    4/23/2023 2:15 PM                               -
+        =  Author:        Curtis Leggett                                  =
+        -  Copyright:     2026 Synapse Co.                                -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       2026.03.24.010                                  -
+        =-=-                       =-=-=-=-=-=-=-=                     -=-=
+        -       The witness is a ghost,                                   -
+        =                      yet, somewhere,                            =
+        -                             a file is remembering you.          -
+        =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
     param()
