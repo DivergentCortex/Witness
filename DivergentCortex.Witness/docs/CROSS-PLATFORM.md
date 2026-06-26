@@ -523,15 +523,15 @@ function Test-NonInteractiveService {
 
 ## Summary Table
 
-| Mechanism | Linux Equivalent Exists | Final Idiom (one-liner) | Verdict |
-|---|---|---|---|
-| Process identity / username | Full | `if ($IsWindows) { [WindowsIdentity]::GetCurrent().Name } else { "$([Environment]::UserDomainName)\$([Environment]::UserName)" }` | needs-correction |
-| Admin / elevation status | Full | `[System.Environment]::IsPrivilegedProcess` | confirmed |
-| Machine / host name | Full | `[System.Environment]::MachineName` | confirmed |
-| Domain-qualified user identity | Partial | `[System.Environment]::UserDomainName` | confirmed |
-| Interactive console/desktop user | Partial | Tiered: loginctl > who > $env:USER | needs-correction |
-| Logon / session type | Partial | Layered: SSH_CONNECTION > XDG_SESSION_TYPE > loginctl > isatty | needs-correction |
-| Service / non-interactive context | Partial | `$noTty -or ($hasInvocationId -and $hasJournalStream)` | confirmed |
+| Mechanism                         | Linux Equivalent Exists | Final Idiom (one-liner)                                                                                                           | Verdict          |
+| --------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| Process identity / username       | Full                    | `if ($IsWindows) { [WindowsIdentity]::GetCurrent().Name } else { "$([Environment]::UserDomainName)\$([Environment]::UserName)" }` | needs-correction |
+| Admin / elevation status          | Full                    | `[System.Environment]::IsPrivilegedProcess`                                                                                       | confirmed        |
+| Machine / host name               | Full                    | `[System.Environment]::MachineName`                                                                                               | confirmed        |
+| Domain-qualified user identity    | Partial                 | `[System.Environment]::UserDomainName`                                                                                            | confirmed        |
+| Interactive console/desktop user  | Partial                 | Tiered: loginctl > who > $env:USER                                                                                                | needs-correction |
+| Logon / session type              | Partial                 | Layered: SSH_CONNECTION > XDG_SESSION_TYPE > loginctl > isatty                                                                    | needs-correction |
+| Service / non-interactive context | Partial                 | `$noTty -or ($hasInvocationId -and $hasJournalStream)`                                                                            | confirmed        |
 
 **Verdict key:** "confirmed" means the verifier validated the idiom with no changes needed.
 "needs-correction" means the verifier found defects (dead variables, missing guards, trailing

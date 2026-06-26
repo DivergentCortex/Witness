@@ -42,19 +42,19 @@ The manifest (`.psd1`) exports exactly three functions: `Write-Log`, `Initialize
 
 `Get-PlatformContext` is a private function that centralizes all OS-specific identity and context detection. It runs once during `Initialize-Log` and returns a `[pscustomobject]` with these fields:
 
-| Field | Windows | Linux/macOS |
-|---|---|---|
-| Platform | `'Windows'` | `'Linux'` or `'macOS'` |
-| IdentityName | `WindowsIdentity.GetCurrent().Name` (SAM format) | `[Environment]::UserDomainName\UserName` |
-| LogonType | `WindowsIdentity.AuthenticationType` | `'N/A'` |
-| IsSystem | True if identity is `NT AUTHORITY\SYSTEM` | Always `$false` |
-| IsAdmin | `WindowsPrincipal.IsInRole(Administrator)` | `[Environment]::IsPrivilegedProcess` (7.4+) or `id -u` fallback |
-| UserDomainName | AD domain or workgroup name | Hostname (documented gap) |
-| UserName | `[Environment]::UserName` | `[Environment]::UserName` |
-| InteractiveUser | Owner of `explorer.exe` | loginctl graphical session, `who(1)`, or `[Environment]::UserName` |
-| SessionType | `WindowsIdentity.AuthenticationType` | `SSH_CONNECTION` / `XDG_SESSION_TYPE` / loginctl / TTY heuristic |
-| HostName | `[Environment]::MachineName` | `[Environment]::MachineName` |
-| ProcessId | `$PID` | `$PID` |
+| Field           | Windows                                          | Linux/macOS                                                        |
+| --------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| Platform        | `'Windows'`                                      | `'Linux'` or `'macOS'`                                             |
+| IdentityName    | `WindowsIdentity.GetCurrent().Name` (SAM format) | `[Environment]::UserDomainName\UserName`                           |
+| LogonType       | `WindowsIdentity.AuthenticationType`             | `'N/A'`                                                            |
+| IsSystem        | True if identity is `NT AUTHORITY\SYSTEM`        | Always `$false`                                                    |
+| IsAdmin         | `WindowsPrincipal.IsInRole(Administrator)`       | `[Environment]::IsPrivilegedProcess` (7.4+) or `id -u` fallback    |
+| UserDomainName  | AD domain or workgroup name                      | Hostname (documented gap)                                          |
+| UserName        | `[Environment]::UserName`                        | `[Environment]::UserName`                                          |
+| InteractiveUser | Owner of `explorer.exe`                          | loginctl graphical session, `who(1)`, or `[Environment]::UserName` |
+| SessionType     | `WindowsIdentity.AuthenticationType`             | `SSH_CONNECTION` / `XDG_SESSION_TYPE` / loginctl / TTY heuristic   |
+| HostName        | `[Environment]::MachineName`                     | `[Environment]::MachineName`                                       |
+| ProcessId       | `$PID`                                           | `$PID`                                                             |
 
 The adapter is used only for the `Initialize-Log` start banner. Its result is held in a local variable (`$ctx`) inside `Initialize-Log`, not stored in module scope. An earlier version cached it in `$script:WitnessContext`, but that was dead state (assigned but never read after `Initialize-Log` returned) and was removed.
 
@@ -115,15 +115,15 @@ Field details:
 
 ### Severity to type mapping
 
-| Severity value | CMTrace type code |
-|---|---|
-| Info | 1 |
-| Information | 1 (mapped to Info internally) |
-| Success | 1 |
-| Warning | 2 |
-| Error | 3 |
-| Verbose | 4 |
-| Debug | 5 |
+| Severity value | CMTrace type code             |
+| -------------- | ----------------------------- |
+| Info           | 1                             |
+| Information    | 1 (mapped to Info internally) |
+| Success        | 1                             |
+| Warning        | 2                             |
+| Error          | 3                             |
+| Verbose        | 4                             |
+| Debug          | 5                             |
 
 ## Size-based rotation
 

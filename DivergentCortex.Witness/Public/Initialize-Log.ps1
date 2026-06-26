@@ -26,11 +26,11 @@ function Initialize-Log {
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    4/23/2023 2:15 PM                               -
+        -  Created on:    11/08/2022 9:30 AM                              -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2026 Synapse Co.                                -
+        -  Copyright:     2022 Synapse Co.                                -
         =  Organization:  Divergent Cortex                                =
-        -  Version:       2026.03.24.010                                  -
+        -  Version:       2024.01.15.004                                  -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
         =                      yet, somewhere,                            =
@@ -38,7 +38,7 @@ function Initialize-Log {
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     #>
     [CmdletBinding()]
-    Param (
+    param (
         [Parameter(Mandatory = $false)]
         [string]$LogFilePath,
 
@@ -54,7 +54,8 @@ function Initialize-Log {
     $callerCandidate = $null
     if ($PSBoundParameters.ContainsKey('LogFilePath') -and -not [string]::IsNullOrWhiteSpace($LogFilePath)) {
         $callerCandidate = $LogFilePath
-    } else {
+    }
+    else {
         $callerScopePath = $PSCmdlet.SessionState.PSVariable.GetValue('LogFilePath')
         if (-not [string]::IsNullOrWhiteSpace($callerScopePath)) {
             $callerCandidate = $callerScopePath
@@ -80,8 +81,11 @@ function Initialize-Log {
             if ($callStack.Count -gt 1) {
                 $ScriptName = $callStack[1].ScriptName | Split-Path -Leaf
             }
-            if ([string]::IsNullOrWhiteSpace($ScriptName)) { $ScriptName = 'Unknown Script' }
-        } catch {
+            if ([string]::IsNullOrWhiteSpace($ScriptName)) {
+                $ScriptName = 'Unknown Script' 
+            }
+        }
+        catch {
             $ScriptName = 'Unknown Script'
         }
     }

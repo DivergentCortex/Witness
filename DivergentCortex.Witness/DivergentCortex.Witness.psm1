@@ -15,11 +15,16 @@ Set-StrictMode -Version Latest
 # ---- Platform probe (Fix [3]) ----
 # Test-Path Variable:IsWindows is false on PS 5.1 (variable does not exist).
 # Absence of $IsWindows -> treat as Windows (correct for PS 5.1 which is Windows-only).
-$script:WitnessIsWindows = if (Test-Path Variable:IsWindows) { $IsWindows } else { $true }
+$script:WitnessIsWindows = if (Test-Path Variable:IsWindows) {
+    $IsWindows 
+}
+else {
+    $true 
+}
 
 # ---- Module-scope state ----
 $script:WitnessLogFilePath = $null   # Set by Initialize-Log
-$script:WitnessCleanupRan  = $false  # Set by Write-Log or Write-LogFinal; reset by Initialize-Log
+$script:WitnessCleanupRan = $false  # Set by Write-Log or Write-LogFinal; reset by Initialize-Log
 # Note: $script:WitnessContext is intentionally absent. Get-PlatformContext runs once in
 # Initialize-Log and its result is held only in a local variable for the banner. It is
 # not stored in module scope because Write-Log resolves context= cheaply per write and
@@ -27,13 +32,13 @@ $script:WitnessCleanupRan  = $false  # Set by Write-Log or Write-LogFinal; reset
 
 # ---- Config defaults (Fix [13]) ----
 # These are the fallback values when the consumer has not set the $Global: equivalents.
-$script:WitnessAutoCleanup    = $true
-$script:WitnessMaxSizeMB      = 10
-$script:WitnessMaxAgeDays     = 7
+$script:WitnessAutoCleanup = $true
+$script:WitnessMaxSizeMB = 10
+$script:WitnessMaxAgeDays = 7
 $script:WitnessVerboseConsole = $false
 $script:WitnessVerboseLogfile = $false
-$script:WitnessDebugConsole   = $false
-$script:WitnessDebugLogfile   = $false
+$script:WitnessDebugConsole = $false
+$script:WitnessDebugLogfile = $false
 
 # ---- Load Private helpers first ----
 $privatePath = Join-Path $PSScriptRoot 'Private'
