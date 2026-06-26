@@ -139,6 +139,32 @@ The original `Write-Log.ps1` lives at `donor-code/Write-Log.ps1` and is read-onl
 
 Public function names (`Write-Log`, `Initialize-Log`, `Write-LogFinal`) are preserved unchanged. Existing consumer scripts work without modification when switching from the dot-sourced donor to the module import.
 
+## Native debug/verbose preference gate
+
+Write-Log honors the standard PowerShell preference variables (`$DebugPreference`, `$VerbosePreference`) as the master "on" switch for debug and verbose output. A consumer who runs their script or function with `-Debug` or `-Verbose`, or who sets `$DebugPreference`/`$VerbosePreference` directly, gets debug/verbose output from Write-Log automatically with no custom flags required. This matches the behavior of Microsoft's own `Write-Debug`/`Write-Verbose`.
+
+### The module boundary subtlety
+
+Write-Log is a module function. Preference variables set in the caller's scope or in an ancestor function's scope do NOT flow into a module function automatically via the standard `$DebugPreference` variable. The module has its own session state and its own copy of `$DebugPreference`, which defaults to `'SilentlyContinue'`.
+
+The fix is `$PSCmdlet.GetVariableValue('DebugPreference')`. This method walks the dynamic scope chain - caller, parent, grandparent - and crosses the module session-state boundary to find the value the caller or its ancestor set. It is the only reliable way to read a preference variable that was set by `-Debug`/`-Verbose` on a parent function when the callee is in a different module session-state.
+
+Verified empirically (2026-06-26): reading `$DebugPreference` directly inside Write-Log always returns the module's own default (`'SilentlyContinue'`) even when the calling script or function was invoked with `-Debug`. `$PSCmdlet.GetVariableValue('DebugPreference')` returns `'Continue'` in the same scenario. This is the implementation Write-Log uses.
+
+### Precedence model
+
+The three sources are evaluated per message, per surface (console and logfile independently):
+
+1. **Native preference variable** (`$DebugPreference`/`$VerbosePreference` read via `GetVariableValue`): master "on" switch. When active (any value that is not `'SilentlyContinue'`), enables BOTH console and file for that severity, overriding the per-surface controls.
+2. **`$Global:DebugConsole`/`$Global:DebugLogfile`** (and Verbose equivalents): per-surface fine-grained overrides. Consumers who set only `$Global:DebugLogfile = $true` get file-only output without touching the native mechanism. Old consumers who already use these flags continue to work unchanged.
+3. **`$script:Witness*` module defaults** (set in the `.psm1` loader, all `$false`): fallback when neither the native preference nor a `$Global:` override is set.
+
+Default behavior: with no `-Debug`/`-Verbose`, no preference set, and no `$Global:` flags, debug and verbose produce nothing on either surface.
+
+### Robust comparison
+
+The gate uses `-ne 'SilentlyContinue'` rather than `-eq 'Continue'`. PowerShell can set preference variables to `'Inquire'`, `'Break'`, or `'Stop'`, all of which indicate that output is wanted. Testing for equality with `'Continue'` would miss those cases. The `-ne 'SilentlyContinue'` check correctly classifies all "active" states.
+
 ## PS 5.1 compatibility
 
 Windows PowerShell 5.1 is the original deployment target. The module avoids all PS 7+ syntax:
