@@ -1,6 +1,4 @@
-# PSScriptAnalyzer suppressions:
-# PSAvoidGlobalVars: $Global:LogFilePath is the documented legacy fallback for consumers
-#   that set this before importing the module. Intentional, not accidental global use.
+# PSAvoidGlobalVars suppressed, documented legacy fallback
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
 param()
 
@@ -12,10 +10,10 @@ function Resolve-WitnessLogPath {
     .DESCRIPTION
         Shared by Write-Log and Write-LogFinal. Walks three resolution layers in order:
 
-          1. CallerResolved -- the value the public caller already resolved from its
-             own parameter and caller-scope check. Pass $null if nothing was found.
-          2. $script:WitnessLogFilePath -- set by Initialize-Log.
-          3. $Global:LogFilePath -- legacy dot-source back-compat fallback.
+          1. CallerResolved (explicit param or caller-scope value, passed in by
+             the public function that already checked those layers).
+          2. $script:WitnessLogFilePath (set by Initialize-Log).
+          3. $Global:LogFilePath (dot-source back-compat).
 
         Returns $null when no layer yields a non-whitespace value.
 
@@ -24,7 +22,7 @@ function Resolve-WitnessLogPath {
         check. Pass $null or empty string if those layers yielded nothing.
 
     .OUTPUTS
-        System.String -- the resolved path, or $null.
+        System.String. The resolved path, or $null.
 
     .EXAMPLE
         $path = Resolve-WitnessLogPath -CallerResolved $userSuppliedPath
