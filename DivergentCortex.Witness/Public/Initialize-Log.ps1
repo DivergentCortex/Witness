@@ -185,13 +185,20 @@ function Initialize-Log {
     finally {
         try { if ($null -ne $streamWriter) { $streamWriter.Dispose() } } catch { }
         try { if ($null -ne $fileStream)   { $fileStream.Dispose()   } } catch { }
-        if ($isSCCMDrive) {
-            try {
-                Set-Location $originalLocation -ErrorAction SilentlyContinue
-            }
-            catch {
-                Write-Warning "Initialize-Log: Could not restore CMSite location: $_"
-            }
+    }
+
+    # Emit the banner to the console unconditionally - session context must be visible
+    # on screen at the top of every run regardless of debug/verbose gate settings.
+    foreach ($line in $bannerLines) {
+        Write-Host $line -ForegroundColor Cyan
+    }
+
+    if ($isSCCMDrive) {
+        try {
+            Set-Location $originalLocation -ErrorAction SilentlyContinue
+        }
+        catch {
+            Write-Warning "Initialize-Log: Could not restore CMSite location: $_"
         }
     }
 }
