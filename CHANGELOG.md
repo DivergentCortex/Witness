@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026.06.25.025] - 2026-06-25
+### docs: Finalize .NOTES signature with staircase tagline across all functions
+
+What changed:
+- Synced final operator-authored .NOTES signature block to all 6 function files: wide =-=- border, fields (Created on, Author, Copyright, Organization, Version), broken divider, and cascading tagline: 'The witness is a ghost, / yet, somewhere, / a file is remembering you.'
+
+Why:
+- Operator-authored signature with cascading philosophical tagline reflecting the Witness module identity. Final version after iterative refinement in this session.
+
+
 ## [2026.06.25.024] - 2026-06-25
 ### docs: Final .NOTES signature block with =-=- border and tagline
 
