@@ -1,5 +1,17 @@
 # Changelog
 
+## [2026.06.26.034] - 2026-06-26
+### fix(SECURITY.md): remove personal email from public vulnerability reporting instructions
+
+What changed:
+- Removed societary.shelter@gmail.com from SECURITY.md alternate contact section
+- Replaced email-based reporting with GitHub-native private vulnerability reporting as sole contact method
+- No personal email addresses remain in any tracked file
+
+Why:
+- Personal email address was exposed in a public repository. GitHub private vulnerability reporting is already enabled on this repo and is the correct channel.
+
+
 ## [2026.06.26.033] - 2026-06-26
 ### refactor(DivergentCortex.Witness): signature .NOTES block moved under .SYNOPSIS in all function files; in-source PSScriptAnalyzer suppressions removed
 

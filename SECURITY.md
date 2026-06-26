@@ -9,8 +9,8 @@ it privately rather than opening a public issue.
 On the repository page, go to Security > Advisories > Report a vulnerability.
 This keeps the details confidential until a fix is ready.
 
-**Alternate contact:** Reach the maintainer at societary.shelter@gmail.com
-with "SECURITY: DivergentCortex.Witness" in the subject line.
+**No email reports.** Use the GitHub private vulnerability reporting link above.
+Do not open a public issue or send email for security vulnerabilities.
 
 Please include a description of the issue, steps to reproduce, and the
 PowerShell version and platform where you observed it. We will respond
