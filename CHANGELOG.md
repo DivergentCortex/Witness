@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026.06.25.028] - 2026-06-25
+### fix(DivergentCortex.Witness): PS-standards pass: comment-based help, PSScriptAnalyzer clean, banner always-write fix
+
+What changed:
+- Write-Log.ps1: added [OutputType([void])], added process{} block for correct pipeline semantics, changed [switch]$WriteBackToHost=$true to [bool]$WriteBackToHost=$true (fixes PSAvoidDefaultValueSwitchParameter), added [ValidateRange] on MaxRetries and RetryDelay, filled previously-empty catch blocks with Write-Warning, stripped trailing whitespace, added file-level SuppressMessageAttribute for PSAvoidOverwritingBuiltInCmdlets/PSAvoidGlobalVars/PSAvoidUsingWriteHost with written justification for each, rewrote inline comments to remove AI-generic phrasing
+- Initialize-Log.ps1: rewrote banner write from Write-Log -Severity Debug/Verbose calls to a direct FileStream append loop -- banner lines are session context that must always be recorded regardless of gate settings; this fixes 6 Pester failures (tests that checked SCRIPT START was present in the log file after Initialize-Log, which were suppressed when debug/verbose defaulted off), added [OutputType([void])], expanded comment-based help with .OUTPUTS and two .EXAMPLE blocks
+- Write-LogFinal.ps1: added [OutputType([void])], added Position=0 on $Message, added [OutputType], added SuppressMessageAttribute for PSAvoidGlobalVars with justification, removed orphan Write-Log -Severity Verbose 'Final log entry' line (dead code -- cleanup runs directly after), expanded comment-based help with .OUTPUTS and two .EXAMPLE blocks
+- Get-PlatformContext.ps1: added [OutputType([pscustomobject])], replaced all 4 empty catch blocks with Write-Verbose diagnostic messages, stripped trailing whitespace, tightened inline comments to professional voice
+- Resolve-WitnessLogPath.ps1: added [OutputType([System.String])], added [Parameter(Mandatory=$false)] on CallerResolved, added SuppressMessageAttribute for PSAvoidGlobalVars with justification, expanded .EXAMPLE with error-handling pattern
+- Clear-LogFile.ps1: added [OutputType([void])], added [ValidateNotNullOrEmpty()] on LogFolder, added [ValidateRange(1,365)] on MaxAgeDays, added .OUTPUTS section to CBH
+- DivergentCortex.Witness.psm1: stripped trailing whitespace on all lines, condensed multi-line platform-probe if/else to single line, removed dead $script:WitnessContext comment block
+- PSScriptAnalyzer: BEFORE 133 findings (67 Warning, 66 Information) on module files; AFTER 0 findings
+
+Why:
+- Module passed correctness review but had no comment-based help on public functions, switch param defaulting true triggering PSSA, empty catch blocks, missing OutputType declarations, and trailing whitespace throughout. The banner-always-write fix resolves 6 Pester test failures that appeared after the debug/verbose gating defaults were changed to false -- Initialize-Log was writing the session-start header through Write-Log -Severity Debug, which was then suppressed by the gate, leaving the log file empty after initialization.
+
+
 ## [2026.06.25.027] - 2026-06-25
 ### chore(DivergentCortex.Witness): scrub inline comments to doctrine voice across four module files
 
