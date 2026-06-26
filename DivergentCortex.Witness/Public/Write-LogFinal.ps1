@@ -43,11 +43,11 @@ function Write-LogFinal {
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    3/19/2024 1:20 PM                               -
+        -  Created on:    04/23/2023                                      -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2024 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                -
-        -  Version:       2024.09.30.003                                  -
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
         =                      yet, somewhere,                            =

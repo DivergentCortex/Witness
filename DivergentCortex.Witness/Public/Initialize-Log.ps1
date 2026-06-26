@@ -51,11 +51,11 @@ function Initialize-Log {
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    11/08/2022 9:30 AM                              -
+        -  Created on:    04/23/2023                                      -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2022 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                -
-        -  Version:       2024.01.15.004                                  -
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
         =                      yet, somewhere,                            =

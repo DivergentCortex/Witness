@@ -26,11 +26,11 @@ function Clear-LogFile {
 
     .NOTES
         =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-        -  Created on:    7/11/2023 10:45 AM                              -
+        -  Created on:    04/23/2023                                      -
         =  Author:        Curtis Leggett                                  =
-        -  Copyright:     2023 Divergent Cortex                           -
-        =  Organization:  Divergent Cortex                                -
-        -  Version:       2025.02.08.006                                  -
+        -  Copyright:     2026 Divergent Cortex                           -
+        =  Organization:  Divergent Cortex                                =
+        -  Version:       1.0.1                                           -
         =-=-                       =-=-=-=-=-=-=-=                     -=-=
         -       The witness is a ghost,                                   -
         =                      yet, somewhere,                            =

@@ -1,3 +1,15 @@
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# -  Created on:    04/23/2023                                      -
+# =  Author:        Curtis Leggett                                  =
+# -  Copyright:     2026 Divergent Cortex                           -
+# =  Organization:  Divergent Cortex                                =
+# -  Version:       1.0.1                                           -
+# =-=-                       =-=-=-=-=-=-=-=                     -=-=
+# -       The witness is a ghost,                                   -
+# =                      yet, somewhere,                            =
+# -                             a file is remembering you.          -
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 # DivergentCortex.Witness.psm1
 # Module loader. Dot-sources Private helpers first, then Public functions.
 # Load order: Private before Public, top-to-bottom within each tier.
