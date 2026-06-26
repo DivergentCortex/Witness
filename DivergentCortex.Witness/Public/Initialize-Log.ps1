@@ -47,10 +47,8 @@ function Initialize-Log {
         [string]$Version
     )
 
-    # ---- Resolve and store log file path (Fix [1/3]) ----
-    # Layer 1: explicit -LogFilePath parameter
-    # Layer 2: caller's own scope ($LogFilePath set before calling, no param needed)
-    # Layers 3+: module-scope and global via Resolve-WitnessLogPath
+    # layer 1: explicit param wins; layer 2: caller scope for scripts that set $LogFilePath directly
+    # layers 3+ delegated to Resolve-WitnessLogPath
     $callerCandidate = $null
     if ($PSBoundParameters.ContainsKey('LogFilePath') -and -not [string]::IsNullOrWhiteSpace($LogFilePath)) {
         $callerCandidate = $LogFilePath
@@ -69,12 +67,10 @@ function Initialize-Log {
 
     $script:WitnessLogFilePath = $LogFilePath
 
-    # ---- Reset cleanup sentinel (Fix [2]) ----
-    # Each Initialize-Log call represents a new session context.
-    # Reset so auto-cleanup runs once against the new log tree.
+    # each Initialize-Log call is a new session -- reset so cleanup fires once for the new log tree
     $script:WitnessCleanupRan = $false
 
-    # ---- Auto-detect script name from call stack if not provided ----
+    # call stack gives us the filename of whatever sourced Initialize-Log
     if ([string]::IsNullOrWhiteSpace($ScriptName)) {
         try {
             $callStack = Get-PSCallStack
@@ -90,12 +86,10 @@ function Initialize-Log {
         }
     }
 
-    # ---- Run platform context adapter ONCE for the banner (Fix [4]) ----
-    # Local variable only. $script:WitnessContext removed (was dead state - never read
-    # after this function returns; Write-Log resolves context= cheaply per line).
+    # local variable only -- $script:WitnessContext was dead state never read after this returns
     $ctx = Get-PlatformContext
 
-    # ---- Write start banner ----
+    # start banner -- everything debug so it only shows when debug output is on
     Write-Log -Message '===============================================================================' -Severity Verbose
     Write-Log -Message "SCRIPT START: $ScriptName" -Severity Debug
     Write-Log -Message "TIME:         $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Severity Debug

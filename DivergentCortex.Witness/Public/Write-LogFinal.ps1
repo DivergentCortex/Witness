@@ -50,27 +50,23 @@ function Write-LogFinal {
     Write-Log -Message $Message -Severity $Severity
     Write-Log -Message 'Final log entry: Triggering log cleanup.' -Severity Verbose
 
-    # ---- Double-cleanup guard (Fix [1]) ----
-    # If Write-Log already ran auto-cleanup this session, skip it here.
+    # Write-Log may have already cleaned up this session -- don't run it twice
     if ($script:WitnessCleanupRan) {
         return
     }
 
-    # ---- Config-aware retention (Fix [R1]) ----
-    # Resolve MaxAgeDays using the same module-scope / global-override chain Write-Log uses.
-    # Both cleanup paths must apply the same retention policy.
+    # same module-scope / global-override chain Write-Log uses -- both paths must agree on retention
     $maxAgeDays = $script:WitnessMaxAgeDays
     if (Test-Path Variable:Global:WriteLogMaxAgeDays) {
         $maxAgeDays = $Global:WriteLogMaxAgeDays 
     }
 
-    # ---- Resolve log file path (Fix [2], Fix [1/3]) ----
+    # resolve path the same way Write-Log does so we find the right folder
     $callerScopePath = $PSCmdlet.SessionState.PSVariable.GetValue('LogFilePath')
     $resolvedPath = Resolve-WitnessLogPath -CallerResolved $callerScopePath
 
     if ([string]::IsNullOrWhiteSpace($resolvedPath)) {
-        # Fix [R3]: set sentinel before returning so no future path can trigger cleanup
-        # in this session via a retry or a second Write-LogFinal call.
+        # set sentinel even on early return -- a second Write-LogFinal call must not retry cleanup
         $script:WitnessCleanupRan = $true
         Write-Log -Message 'Write-LogFinal: Cannot determine log folder - skipping cleanup.' -Severity Warning
         return
@@ -78,12 +74,12 @@ function Write-LogFinal {
 
     $logFolder = Split-Path $resolvedPath
     if ([string]::IsNullOrWhiteSpace($logFolder) -or -not (Test-Path $logFolder)) {
-        $script:WitnessCleanupRan = $true  # Fix [R3]: same invariant on this return path
+        $script:WitnessCleanupRan = $true  # same invariant -- no cleanup without a valid folder
         Write-Log -Message "Write-LogFinal: Log folder not found at '$logFolder' - skipping cleanup." -Severity Warning
         return
     }
 
-    $script:WitnessCleanupRan = $true  # set before calling to prevent any recursion path
+    $script:WitnessCleanupRan = $true  # before the call -- Clear-LogFile calls Write-Log
     try {
         Clear-LogFile -LogFolder $logFolder -MaxAgeDays $maxAgeDays
     }
