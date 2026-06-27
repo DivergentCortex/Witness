@@ -2,11 +2,15 @@
 
 # DivergentCortex.Witness
 
+
 *the observer of the unsaid, the truth within the artifacts*
+
 
 [![CI](https://github.com/DivergentCortex/Witness/actions/workflows/test.yml/badge.svg)](https://github.com/DivergentCortex/Witness/actions/workflows/test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey) ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207.4%2B-blue)
 
 ---
+
+This module was devolped over a span of about 5 years with functional features added gradually when a need for it was identified. At first it was a simple logging module for logging SCCM packages and deployments which it still does gracefully with full CMtrace compatible output. THen the console features for live script runs became more needed I wanted to gbe able to see the line numbers and functions that were being called, especially for error tracking and troubleshooting. This detail is color coded and returned to the PS console during the run and is mirrored into the logs as well.
 
 - Color-coded console output, live. Severity at a glance, success green, warning yellow, error red. You watch what is happening as it runs instead of squinting at a wall of white text.
 - Every line knows where it came from, the function and line that wrote it, stamped in automatically.
