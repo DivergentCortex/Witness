@@ -10,7 +10,7 @@
 
 ---
 
-This module was devolped over a span of about 5 years with functional features added gradually when a need for it was identified. At first it was a simple logging module for logging SCCM packages and deployments which it still does gracefully with full CMtrace compatible output. THen the console features for live script runs became more needed I wanted to gbe able to see the line numbers and functions that were being called, especially for error tracking and troubleshooting. This detail is color coded and returned to the PS console during the run and is mirrored into the logs as well.
+Five years of additions, each one added when something was missing. Started as a logging module for SCCM packages and deployments, which it still handles with full CMTrace-compatible output. Then console visibility started mattering more. I needed to see function names and line numbers as scripts ran, especially when tracking down errors. So that got added. Color-coded output to the console, mirrored to the log.
 
 - Color-coded console output, live. Severity at a glance, success green, warning yellow, error red. You watch what is happening as it runs instead of squinting at a wall of white text.
 - Every line knows where it came from, the function and line that wrote it, stamped in automatically.
