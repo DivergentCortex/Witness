@@ -24,6 +24,7 @@ This is the logging backbone of an entire PowerShell fleet, hundreds of scripts,
 
 A quick run of examples/Example-Usage.ps1:
 
+Function names are purposefully truncated to save space.
 ```
 [ INFO    ] [Test-Wareh..] [125]: Endpoint reachable. Latency: 38ms.
 [ WARNING ] [Get-Widget..] [64]: SKU WGT-200 is out of stock in 'WH-01'.
