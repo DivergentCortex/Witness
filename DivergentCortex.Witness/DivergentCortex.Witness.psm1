@@ -25,7 +25,12 @@ Set-StrictMode -Version Latest
 
 # Platform probe: Test-Path Variable:IsWindows is false on PS 5.1 (variable does not exist).
 # Absence of $IsWindows -> treat as Windows, which is correct for PS 5.1 (Windows-only).
-$script:WitnessIsWindows = if (Test-Path Variable:IsWindows) { $IsWindows } else { $true }
+$script:WitnessIsWindows = if (Test-Path Variable:IsWindows) {
+    $IsWindows 
+}
+else {
+    $true 
+}
 
 # Module-scope state
 $script:WitnessLogFilePath = $null   # Set by Initialize-Log
