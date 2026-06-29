@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026.06.29.036] - 2026-06-29
+### docs(CHANGELOG): Supersede the donor never-modified lineage claim; dot-source script is now a maintained working helper
+
+What changed:
+- The Background section and entry 2026.06.25.017 state the donor at donor-code/Write-Log.ps1 was preserved read-only and never modified; that is superseded as of 2026-06-29
+- The dot-source Write-Log.ps1 is the operator's primary working helper (embedded in other modules) and was updated in place to full module parity in entry 2026.06.29.035; it is a living, maintained file, not a frozen artifact
+
+Why:
+- The operator directed that the dot-source script be brought to module parity and that the changelog reflect it was updated. The append-only changelog tool cannot edit the older Background prose in place, so this entry records the correction so future readers do not treat the donor as read-only.
+
+
 ## [2026.06.29.035] - 2026-06-29
 ### refactor(donor-code): Backfill donor Write-Log.ps1 to full DivergentCortex.Witness module parity as the canonical dot-source script
 
