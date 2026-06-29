@@ -1,5 +1,30 @@
 # Changelog
 
+## [2026.06.29.035] - 2026-06-29
+### refactor(donor-code): Backfill donor Write-Log.ps1 to full DivergentCortex.Witness module parity as the canonical dot-source script
+
+What changed:
+- Rewrote donor-code/Write-Log.ps1 in place as the single-file dot-source twin of the module (operator-directed; donor is the working helper embedded in other modules, distinct from the release module)
+- Added Get-PlatformContext (cross-platform Windows/Linux/macOS) replacing Windows-only Get-ExecutionContextInfo; all WindowsIdentity calls now guarded by $script:WitnessIsWindows so it no longer throws PlatformNotSupportedException on Linux/macOS
+- context= field resolved per write cross-platform (WindowsIdentity on Windows, Environment API elsewhere)
+- Native -Debug/-Verbose support via $PSCmdlet.GetVariableValue so the gate works when dot-sourced into a plain script OR embedded in another module
+- Verbose/Debug surfaces now default OFF (was ON); $Global:* per-surface overrides retained
+- CMTrace time= now local HH:mm:ss.fff with no UTC offset
+- All file writes use UTF-8 no-BOM with explicit NewLine; streams Dispose() in finally
+- Rotation notice only written on successful Rename-Item (no data loss when the file is held open)
+- Component detection fixed to -notlike '*.ps1'; removed banned Write-Verbose calls
+- Layered log path resolution via new Resolve-WitnessLogPath (param -> caller-scope $LogFilePath -> Initialize-Log stored -> $Global:LogFilePath)
+- Cleanup-LogFiles renamed to Clear-LogFile (approved verb), dead $ScriptFilter removed
+- Initialize-Log writes the banner directly to file bypassing gates and echoes to console, adds PLATFORM/SESSION/INTERACTIVE fields, resets the cleanup sentinel, guards CMSite drive
+- Write-LogFinal is sentinel- and retention-aware and accepts Success/Information
+- Added process {} block, ValidateRange on MaxRetries/RetryDelay, [bool]$WriteBackToHost, [OutputType([void])]
+- Version bumped 2026.03.24.010 -> 2026.06.29.011
+- Set-StrictMode intentionally NOT set at file scope (would leak strict mode into the dot-sourcing consumer); documented in the header
+
+Why:
+- The operator uses the standalone dot-source Write-Log.ps1 far more than the release module and embeds it in other modules, so it had to be backfilled with every capability and fix the module gained during the public rebuild. The module gets module-scope isolation for free; the script adapts those mechanisms (PSCmdlet session-state and GetVariableValue, $script: state) to work correctly under both dot-source-into-script and dot-source-into-module. Verified: file parses clean and all six functions load on pwsh/Linux.
+
+
 ## [2026.06.26.034] - 2026-06-26
 ### fix(SECURITY.md): remove personal email from public vulnerability reporting instructions
 
