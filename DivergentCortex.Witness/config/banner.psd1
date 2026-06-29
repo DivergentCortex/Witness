@@ -41,9 +41,9 @@
 #
 
 @{
-    Enabled   = $true
+    Enabled     = $true
 
-    Separator = '==============================================================================='
+    Separator   = '==============================================================================='
 
     HeaderLines = @(
         # Add static branding or title lines here. Example:
@@ -51,19 +51,19 @@
         #   ''
     )
 
-    Fields = @(
-        @{ Name = 'ScriptName';  Label = 'SCRIPT START' }
-        @{ Name = 'Time';        Label = 'TIME'         }
-        @{ Name = 'Identity';    Label = 'IDENTITY'     }
-        @{ Name = 'Context';     Label = 'CONTEXT'      }
-        @{ Name = 'Platform';    Label = 'PLATFORM'     }
-        @{ Name = 'EnvUser';     Label = 'ENV USER'     }
-        @{ Name = 'Interactive'; Label = 'INTERACTIVE'  }
-        @{ Name = 'Session';     Label = 'SESSION'      }
-        @{ Name = 'Host';        Label = 'HOST'         }
-        @{ Name = 'PID';         Label = 'PID'          }
-        @{ Name = 'LogFile';     Label = 'LOG'          }
-        @{ Name = 'Version';     Label = 'VERSION'      }
+    Fields      = @(
+        @{ Name = 'ScriptName'; Label = 'SCRIPT START' }
+        @{ Name = 'Time'; Label = 'TIME' }
+        @{ Name = 'Identity'; Label = 'IDENTITY' }
+        @{ Name = 'Context'; Label = 'CONTEXT' }
+        @{ Name = 'Platform'; Label = 'PLATFORM' }
+        @{ Name = 'EnvUser'; Label = 'ENV USER' }
+        @{ Name = 'Interactive'; Label = 'INTERACTIVE' }
+        @{ Name = 'Session'; Label = 'SESSION' }
+        @{ Name = 'Host'; Label = 'HOST' }
+        @{ Name = 'PID'; Label = 'PID' }
+        @{ Name = 'LogFile'; Label = 'LOG' }
+        @{ Name = 'Version'; Label = 'VERSION' }
     )
 
     FooterLines = @(
