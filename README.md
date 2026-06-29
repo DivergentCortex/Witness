@@ -2,9 +2,7 @@
 
 # DivergentCortex.Witness
 
-
-*the observer of the unsaid, the truth within the artifacts*
-
+_the observer of the unsaid, the truth within the artifacts_
 
 [![CI](https://github.com/DivergentCortex/Witness/actions/workflows/test.yml/badge.svg)](https://github.com/DivergentCortex/Witness/actions/workflows/test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey) ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207.4%2B-blue)
 
@@ -25,6 +23,7 @@ This is the logging backbone of an entire PowerShell fleet, hundreds of scripts,
 A quick run of examples/Example-Usage.ps1:
 
 Function names are purposefully truncated to save space.
+
 ```
 [ INFO    ] [Test-Wareh..] [125]: Endpoint reachable. Latency: 38ms.
 [ WARNING ] [Get-Widget..] [64]: SKU WGT-200 is out of stock in 'WH-01'.
