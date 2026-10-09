@@ -17,7 +17,7 @@ DivergentCortex.Witness/
     Clear-LogFile.ps1                Age-based log cleanup
     Resolve-WitnessLogPath.ps1       Shared log path resolution chain
   donor-code/
-    Write-Log.ps1                    Original monolithic script (read-only spec)
+    Write-Log.ps1                    Dot-source twin of the module, actively maintained in parity
   docs/
     ARCHITECTURE.md                  This file
     CROSS-PLATFORM.md                Per-mechanism cross-platform research
@@ -135,7 +135,7 @@ On Windows, if the current working directory is on a ConfigMgr `CMSite` PSDrive 
 
 ## The donor relationship
 
-The original `Write-Log.ps1` lives at `donor-code/Write-Log.ps1` and is read-only. It is never edited. It serves as the behavioral reference: four years of hardening in production SCCM deployments. The module re-implements its logic with a modular structure and a cross-platform adapter layered in.
+`donor-code/Write-Log.ps1` started as the original monolithic script: four years of hardening in production SCCM deployments. As of 2026-06-29 it is no longer a frozen reference. It was rewritten in place as the single-file dot-source twin of the module, carrying forward every capability and fix the module gained (cross-platform `Get-PlatformContext`, native `-Debug`/`-Verbose` support, local-time timestamps, layered path resolution). It is the operator's primary working helper, embedded directly in other modules, and is actively maintained in parity with the module rather than treated as read-only. See CHANGELOG entries 2026.06.29.035 and 2026.06.29.036 for the record of this change.
 
 Public function names (`Write-Log`, `Initialize-Log`, `Write-LogFinal`) are preserved unchanged. Existing consumer scripts work without modification when switching from the dot-sourced donor to the module import.
 
