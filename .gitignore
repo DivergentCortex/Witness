@@ -1,6 +1,11 @@
-# Logs produced by the module during local testing
-logs/
+# logs remain local except the component inventory
+/logs/*
+!/logs/README.md
 *.log
+
+# python and lint runtime caches
+__pycache__/
+.ruff_cache/
 
 # Example script runtime output (contains real hostnames)
 DivergentCortex.Witness/examples/logs/
@@ -17,3 +22,7 @@ DivergentCortex.Witness/donor-code/
 
 # Archive artifacts
 *.7z
+.archive/
+
+# local canonical module bridge
+/_modules
