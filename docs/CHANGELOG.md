@@ -1,5 +1,74 @@
 # Changelog
 
+## [2026.11.03.061] - 2026-11-03
+Added the standalone repository index for the maintenance tools and ownership docs, keeping root publication files intact and pending activation explicitly labeled. Task 3147.
+
+## [2026.11.03.060] - 2026-11-03
+Documented the uninstalled guard's required existing-hook chain, guard-first cutover prerequisite, refusal rules and safe donor-ignore transition. The original donor remains ignored until archival and activation proof. Task 3147.
+
+## [2026.11.03.059] - 2026-11-03
+Documented release CLI arguments, defaults, result fields, failure behavior, canonical generator dependency and fixture-test limits. The docs do not claim pending Git or Pester acceptance. Task 3147.
+
+## [2026.11.03.058] - 2026-11-03
+Documented the standalone/canonical boundary and manual real-file release flow, preserving the module internals doc and explicitly labeling pending guard, cutover and release evidence. Task 3147.
+
+## [2026.11.03.057] - 2026-11-03
+Documented the canonical release-sync and candidate-check log targets, explicitly distinguishing the uninstalled hook and scratch fixture logs. Task 3147.
+
+## [2026.11.03.056] - 2026-11-03
+Kept the release-tool log inventory trackable while ignoring dated logs and generated Python/ruff caches. Existing historical donor exclusion remains in place until guard-first cutover, preventing accidental employer-reference publication. Task 3147.
+
+## [2026.11.03.055] - 2026-11-03
+Applied ruff's exact import-group correction to the fixture runner after the native check identified the missing separator. Task 3147.
+
+## [2026.11.03.054] - 2026-11-03
+Corrected the pytest teardown iterator annotation and formatted the permanent release fixtures. No test expectation or production behavior changed. Task 3147.
+
+## [2026.11.03.053] - 2026-11-03
+Typed the release report fields explicitly and aligned the sync feature with the native formatter. The verified donor-before-copy order and no-commit/no-push behavior are unchanged. Task 3147.
+
+## [2026.11.03.052] - 2026-11-03
+Aligned the fixture runner imports and formatting with ruff's reported output; it still invokes only the permanent pytest fixtures. Task 3147.
+
+## [2026.11.03.051] - 2026-11-03
+Formatted the candidate-check CLI failure path without changing refusal behavior. Task 3147.
+
+## [2026.11.03.050] - 2026-11-03
+Formatted the manual release CLI failure record without changing execution behavior. Task 3147.
+
+## [2026.11.03.049] - 2026-11-03
+Formatted the task 3147 candidate validator to the native Python formatter contract without changing its file-mode or required-file decisions. Existing 21-test fixture evidence remains distinct from pending hook activation.
+
+## [2026.11.03.048] - 2026-11-03
+Moved donor generation before release-file copying in task 3147. Causation proof through Test-WitnessRelease.py: test_failed_generator_does_not_copy_consumers failed with a copied loader before the change (20 pass, 1 fail); after the ordering change all 21 fixture tests pass. A failed generator now leaves consumer files untouched.
+
+## [2026.11.03.047] - 2026-11-03
+Added fixture regression coverage for task 3147: candidate file modes, missing/unmerged records, release exclusions, dry-run write inventory, standalone manifest/root preservation, stale-file preservation, symlink escapes and donor-generation failure ordering. These tests do not substitute for the pending real Git refusal, clone or Pester acceptance.
+
+## [2026.11.03.046] - 2026-11-03
+Added the sanctioned-script entry point for permanent release-tool fixture tests in task 3147. The runner invokes pytest only and does not issue Git commands; live guard and committed-tree acceptance remain separate.
+
+## [2026.11.03.045] - 2026-11-03
+Added the pre-commit candidate-check entry point for task 3147, using canonical pypaths, pyprocess and pylogger. It fails closed on index-read errors and reports refusal reasons. Hook activation is still pending the effective hooksPath capability; no live guard claim is made.
+
+## [2026.11.03.044] - 2026-11-03
+Added Sync-WitnessRelease.py as the manual CLI for task 3147, defaulting to dry run and requiring an explicit separate release checkout. Apply is opt-in; stdout is a structured write/stale-file plan, and operational records use the canonical pylogger. Runtime verification follows.
+
+## [2026.11.03.043] - 2026-11-03
+Added the manual real-file Witness release preparation implementation for task 3147. It targets a separate checkout, preserves the standalone manifest, excludes ownership/log/js/archive/original-src material, and calls the canonical donor generator with WhatIf for a dry run. Stale files require Axon archival before apply. No automatic Git commit or push exists. Fixture verification is pending.
+
+## [2026.11.03.042] - 2026-11-03
+Added the Witness candidate-index validator for task 3147: it rejects a symlink or other non-100644 entry, unresolved stages and missing required public module files. The hook is not installed yet; refusal proof awaits approved Git plumbing.
+
+## [2026.11.03.041] - 2026-11-03
+Added the project path anchors for the manual Witness release tools, consuming pypaths through the local canonical bridge. Task 3147; release execution remains pending, with no source publication or manifest change.
+
+## [2026.11.03.040] - 2026-11-03
+Ignored the local canonical module bridge and Axon archive directory so release candidates cannot collect machine-local links or preserved source archives by accident. Task 3147; the module symlink guard remains pending.
+
+## [2026.11.03.039] - 2026-11-03
+Added the local _modules symbolic link to consume the canonical fleet modules for the manual Witness release tooling in task 3147. No Witness source, manifest, Git refs or remote was changed. Release sync and guard implementation are not yet verified.
+
 ## [2026.09.24.038] - 2026-09-24
 ### chore(ai_forge): Relocate stale legacy ai_forge deployment to project archive
 
