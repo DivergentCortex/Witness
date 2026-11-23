@@ -10,8 +10,10 @@ function Get-BannerConfig {
           3. The module-shipped default: <ModuleRoot>/config/banner.psd1.
 
         Returns a hashtable with keys: Enabled, Separator, HeaderLines, Fields, FooterLines.
-        If the resolved file cannot be imported, emits a warning and returns the shipped
-        default so the caller always gets a usable config.
+        If the resolved file cannot be imported, the failure is reported through
+        Write-WitnessFailureLine and the shipped default is returned so the caller always
+        gets a usable config. If the shipped default cannot be imported either, a disabled
+        banner config is returned. This function never throws.
 
     .PARAMETER ConfigPath
         Optional explicit path to a banner.psd1 config file.
@@ -43,23 +45,24 @@ function Get-BannerConfig {
     }
 
     try {
-        $config = Import-PowerShellDataFile -Path $resolvedPath -ErrorAction Stop
-        return $config
+        return Import-PowerShellDataFile -Path $resolvedPath -ErrorAction Stop
     }
     catch {
-        Write-Warning "Get-BannerConfig: Could not load banner config from '$resolvedPath': $_. Falling back to shipped default."
-        try {
-            return Import-PowerShellDataFile -Path $defaultPath -ErrorAction Stop
-        }
-        catch {
-            Write-Warning "Get-BannerConfig: Could not load shipped default config either: $_. Banner will be suppressed."
-            return @{
-                Enabled     = $false
-                Separator   = ''
-                HeaderLines = @()
-                Fields      = @()
-                FooterLines = @()
-            }
-        }
+        Write-WitnessFailureLine -LogPath $script:WitnessLogFilePath -Message "Get-BannerConfig: could not load banner config from '$resolvedPath': $($_.Exception.GetType().Name) at line $($MyInvocation.ScriptLineNumber): $($_.Exception.Message). Falling back to the shipped default."
+    }
+
+    try {
+        return Import-PowerShellDataFile -Path $defaultPath -ErrorAction Stop
+    }
+    catch {
+        Write-WitnessFailureLine -LogPath $script:WitnessLogFilePath -Message "Get-BannerConfig: could not load the shipped default config '$defaultPath': $($_.Exception.GetType().Name) at line $($MyInvocation.ScriptLineNumber): $($_.Exception.Message). The banner will be suppressed."
+    }
+
+    return @{
+        Enabled     = $false
+        Separator   = ''
+        HeaderLines = @()
+        Fields      = @()
+        FooterLines = @()
     }
 }

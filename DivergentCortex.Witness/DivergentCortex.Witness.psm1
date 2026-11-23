@@ -25,12 +25,7 @@ Set-StrictMode -Version Latest
 
 # Platform probe: Test-Path Variable:IsWindows is false on PS 5.1 (variable does not exist).
 # Absence of $IsWindows -> treat as Windows, which is correct for PS 5.1 (Windows-only).
-$script:WitnessIsWindows = if (Test-Path Variable:IsWindows) {
-    $IsWindows 
-}
-else {
-    $true 
-}
+$script:WitnessIsWindows = if (Test-Path Variable:IsWindows) { $IsWindows } else { $true }
 
 # Module-scope state
 $script:WitnessLogFilePath = $null   # Set by Initialize-Log
@@ -50,6 +45,16 @@ $privatePath = Join-Path $PSScriptRoot 'Private'
 . (Join-Path $privatePath 'Get-PlatformContext.ps1')
 . (Join-Path $privatePath 'Clear-LogFile.ps1')
 . (Join-Path $privatePath 'Resolve-WitnessLogPath.ps1')
+. (Join-Path $privatePath 'ConvertTo-WitnessRedactedText.ps1')
+. (Join-Path $privatePath 'Write-WitnessFailureLine.ps1')
+. (Join-Path $privatePath 'Get-WitnessContextUser.ps1')
+. (Join-Path $privatePath 'New-WitnessLogDirectory.ps1')
+. (Join-Path $privatePath 'Write-WitnessConsoleLine.ps1')
+. (Join-Path $privatePath 'Invoke-WitnessRotation.ps1')
+. (Join-Path $privatePath 'Add-WitnessLogLine.ps1')
+. (Join-Path $privatePath 'Invoke-WitnessAutoCleanup.ps1')
+. (Join-Path $privatePath 'Restore-WitnessLocation.ps1')
+. (Join-Path $privatePath 'Write-WitnessBannerFile.ps1')
 
 # Load Public functions.
 $publicPath = Join-Path $PSScriptRoot 'Public'

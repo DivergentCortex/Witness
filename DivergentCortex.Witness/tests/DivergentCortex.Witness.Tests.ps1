@@ -130,7 +130,7 @@ Describe 'Module import and export contract' {
 }
 
 # ============================================================
-# DESCRIBE 2 - CMTrace line shape (Fix [5] field order lock)
+# DESCRIBE 2 - CMTrace line shape (field order lock)
 # ============================================================
 Describe 'CMTrace line shape' {
 
@@ -315,7 +315,7 @@ Describe 'Severity to CMTrace type code mapping' {
 
 # ============================================================
 # DESCRIBE 4 - ValidateSet regression: Success in both public functions
-# Fix [6] regression - Write-LogFinal ValidateSet must include Success
+# Write-LogFinal ValidateSet must include Success
 # ============================================================
 Describe 'ValidateSet regression - Success severity accepted by both public functions' {
 
@@ -356,7 +356,7 @@ Describe 'ValidateSet regression - Success severity accepted by both public func
 }
 
 # ============================================================
-# DESCRIBE 5 - Caller-scope path resolution (Fix [1/3])
+# DESCRIBE 5 - Caller-scope path resolution
 # ============================================================
 Describe 'Caller-scope path resolution' {
 
@@ -415,7 +415,7 @@ Describe 'Caller-scope path resolution' {
         $content | Should -Match 'explicit-logfile-msg'
     }
 
-    It 'Write-Log throws when no path is available in any layer' {
+    It 'Write-Log does not throw when no path is available in any layer and writes no file' {
         # Temporarily clear module-scope path by importing a fresh module copy,
         # which starts with $script:WitnessLogFilePath = $null.
         # We test by calling Write-Log with no Logfile param and no $LogFilePath in scope.
@@ -427,8 +427,20 @@ Describe 'Caller-scope path resolution' {
         Remove-Module DivergentCortex.Witness -Force -ErrorAction SilentlyContinue
         Import-Module $script:ManifestPath -Force -ErrorAction Stop
 
-        { Write-Log -Message 'no-path' -Severity Info -WriteBackToHost:$false } |
-            Should -Throw -ExpectedMessage '*No log file path*'
+        { Write-Log -Message 'no-path' -Severity Info -WriteBackToHost:$false 2>$null } |
+            Should -Not -Throw -Because 'a missing log path is reported through the failure path, not thrown'
+
+        $errWriter = New-Object System.IO.StringWriter
+        $originalErr = [System.Console]::Error
+        [System.Console]::SetError($errWriter)
+        try {
+            Write-Log -Message 'no-path-again' -Severity Info -WriteBackToHost:$false
+        }
+        finally {
+            [System.Console]::SetError($originalErr)
+        }
+        $errWriter.ToString() | Should -Match 'no log file path set' `
+            -Because 'with no usable log file the failure line goes to the error stream'
 
         # Restore module for subsequent tests
         Remove-Module DivergentCortex.Witness -Force -ErrorAction SilentlyContinue
@@ -437,7 +449,7 @@ Describe 'Caller-scope path resolution' {
 }
 
 # ============================================================
-# DESCRIBE 6 - Single cleanup per session / sentinel lifecycle (Fix [12] / Fix [2])
+# DESCRIBE 6 - Single cleanup per session / sentinel lifecycle
 # ============================================================
 Describe 'Single cleanup per session - sentinel lifecycle' {
 
@@ -508,7 +520,7 @@ Describe 'Single cleanup per session - sentinel lifecycle' {
 }
 
 # ============================================================
-# DESCRIBE 7 - Line endings consistency (Fix [5])
+# DESCRIBE 7 - Line endings consistency
 # ============================================================
 Describe 'Line ending consistency' {
 
@@ -665,13 +677,22 @@ Describe 'Initialize-Log behavioral contract' {
         $content | Should -Match 'SCRIPT START'
     }
 
-    It 'throws when no path is available in any layer' {
+    It 'does not throw when no path is available in any layer and reports on the error stream' {
         Remove-Module DivergentCortex.Witness -Force -ErrorAction SilentlyContinue
         Import-Module $script:ManifestPath -Force -ErrorAction Stop
         if (Get-Variable -Name LogFilePath -Scope 0 -ErrorAction SilentlyContinue) {
             Remove-Variable -Name LogFilePath -Scope 0 -ErrorAction SilentlyContinue
         }
-        { Initialize-Log -ScriptName 'NoPath' } | Should -Throw -ExpectedMessage '*No log file path*'
+        $errWriter = New-Object System.IO.StringWriter
+        $originalErr = [System.Console]::Error
+        [System.Console]::SetError($errWriter)
+        try {
+            { Initialize-Log -ScriptName 'NoPath' } | Should -Not -Throw -Because 'a missing log path is reported, never thrown'
+        }
+        finally {
+            [System.Console]::SetError($originalErr)
+        }
+        $errWriter.ToString() | Should -Match 'no log file path provided'
 
         # Restore
         Remove-Module DivergentCortex.Witness -Force -ErrorAction SilentlyContinue
@@ -729,12 +750,12 @@ Describe 'Global LogFilePath fallback (back-compat)' {
 }
 
 # ============================================================
-# DESCRIBE 11 - Config-aware retention: Write-LogFinal passes MaxAgeDays (Fix [R1])
-# Regression: Write-LogFinal previously called Clear-LogFile with no -MaxAgeDays,
-# silently using the default 7 days while Write-Log honored the configured value.
+# DESCRIBE 11 - Config-aware retention: Write-LogFinal passes MaxAgeDays
+# Write-LogFinal must not call Clear-LogFile with no -MaxAgeDays, which would
+# silently use the default 7 days while Write-Log honors the configured value.
 # Both paths must apply the same retention policy.
 # ============================================================
-Describe 'Config-aware retention - Write-LogFinal honors MaxAgeDays (Fix R1)' {
+Describe 'Config-aware retention - Write-LogFinal honors MaxAgeDays' {
 
     It 'Write-LogFinal respects $Global:WriteLogMaxAgeDays when performing cleanup' {
         $randPart     = [System.IO.Path]::GetRandomFileName() -replace '\.', ''
@@ -1291,5 +1312,66 @@ Describe 'Log rotation and component detection regressions' {
             -Because 'a function whose name contains ps1 as a substring must use the function name, not Unknown (Fix #3)'
         $line | Should -Not -Match 'component="Unknown"' `
             -Because 'the old -notlike ''*ps1'' bug would have set component=Unknown for this function'
+    }
+}
+
+# ============================================================
+# DESCRIBE 14 - Logger failure path: never throws, never recurses
+# A failure inside Write-Log is reported by Write-WitnessFailureLine: one
+# CMTrace Warning line appended straight to the log file, or to the error
+# stream when there is no usable log file.
+# ============================================================
+Describe 'Write-Log failure path' {
+
+    It 'a failed rotation rename appends a Warning line to the same log and keeps existing content' {
+        $randPart = [System.IO.Path]::GetRandomFileName() -replace '\.', ''
+        $rotDir   = Join-Path $script:TestTempDir "failpath_rotation_$randPart"
+        New-Item -Path $rotDir -ItemType Directory -Force | Out-Null
+
+        $logPath = Join-Path $rotDir 'active.log'
+        [System.IO.File]::WriteAllText($logPath, "FAILPATH-SENTINEL`n")
+        $Global:WriteLogMaxSizeMB = 0.001
+        [System.IO.File]::AppendAllText($logPath, ('x' * 1100))
+
+        try {
+            chmod 0555 $rotDir
+        }
+        catch {
+            Set-ItResult -Skipped -Because 'chmod not available on this platform'
+            return
+        }
+
+        try {
+            { Write-Log -Message 'failpath-entry' -Logfile $logPath -Severity Info -WriteBackToHost:$false } |
+                Should -Not -Throw -Because 'a failed rotation is reported, never thrown'
+        }
+        finally {
+            chmod 0755 $rotDir
+            Remove-Variable -Name WriteLogMaxSizeMB -Scope Global -ErrorAction SilentlyContinue
+        }
+
+        $content = Get-Content -Path $logPath -Raw
+        $content | Should -Match 'FAILPATH-SENTINEL' -Because 'the original content must survive a failed rotation'
+        $content | Should -Match 'failpath-entry' -Because 'the entry itself must still be written'
+        $content | Should -Match 'could not rotate log to' -Because 'the failure must be recorded as a line in the log'
+        $content | Should -Match 'type="2"[^>]*file="Write-Log.ps1"' -Because 'the failure line is a CMTrace Warning from Write-Log'
+    }
+
+    It 'an uncreatable log folder does not throw and reports on the error stream' {
+        $blocker = Join-Path $script:TestTempDir 'failpath_blocker_file'
+        [System.IO.File]::WriteAllText($blocker, 'not a folder')
+        $logPath = Join-Path (Join-Path $blocker 'sub') 'x.log'
+
+        $errWriter = New-Object System.IO.StringWriter
+        $originalErr = [System.Console]::Error
+        [System.Console]::SetError($errWriter)
+        try {
+            { Write-Log -Message 'failpath-nofolder' -Logfile $logPath -Severity Info -WriteBackToHost:$false } |
+                Should -Not -Throw -Because 'a failed folder create is reported, never thrown'
+        }
+        finally {
+            [System.Console]::SetError($originalErr)
+        }
+        $errWriter.ToString() | Should -Match 'could not create log folder'
     }
 }

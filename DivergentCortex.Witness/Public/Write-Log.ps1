@@ -41,6 +41,11 @@ function Write-Log {
         SCCM/CMSite drive: if the PowerShell working directory is a CMSite PSDrive the
         function temporarily sets location to C: for filesystem operations and restores it.
 
+        Failures inside the logger (a rotation, a locked file, a folder that cannot be
+        created, a missing log path) never throw. The logger cannot report through itself, so
+        each failure goes through Write-WitnessFailureLine: one CMTrace Warning line appended
+        straight to the log file, or to the error stream when there is no usable log file.
+
     .PARAMETER Message
         The text to log. Accepts pipeline input.
 
@@ -146,7 +151,8 @@ function Write-Log {
         $resolvedLogfile = Resolve-WitnessLogPath -CallerResolved $callerCandidate
 
         if ([string]::IsNullOrWhiteSpace($resolvedLogfile)) {
-            throw "FATAL: No log file path set. Call Initialize-Log -LogFilePath first, or set `$LogFilePath in your script scope before calling Write-Log."
+            Write-WitnessFailureLine -Message 'Write-Log: no log file path set. Call Initialize-Log -LogFilePath first, or set $LogFilePath in your script scope before calling Write-Log. The entry was not written.'
+            return
         }
 
         $autoCleanup = $script:WitnessAutoCleanup
@@ -181,6 +187,9 @@ function Write-Log {
         if ($nativeDebugActive)   { $debugToConsole   = $true; $debugToLogfile   = $true }
 
         if ($Severity -eq 'Information') { $Severity = 'Info' }
+
+        # redact before any sink sees the text
+        $Message = ConvertTo-WitnessRedactedText -Text $Message
 
         if ($Severity -eq 'Verbose' -and (-not $verboseToConsole) -and (-not $verboseToLogfile)) { return }
         if ($Severity -eq 'Debug' -and (-not $debugToConsole) -and (-not $debugToLogfile)) { return }
@@ -247,12 +256,7 @@ function Write-Log {
             elseif ($Severity -eq 'Debug') { $severityType = '5' }
 
             # re-resolve per write for impersonation changes
-            if ($script:WitnessIsWindows) {
-                $contextUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-            }
-            else {
-                $contextUser = "$([System.Environment]::UserDomainName)\$([System.Environment]::UserName)"
-            }
+            $contextUser = Get-WitnessContextUser
 
             $logline = "<![LOG[$Message]LOG]!>" +
                 "<time=`"$LogTime`" " +
@@ -263,42 +267,16 @@ function Write-Log {
                 "thread=`"$PID`" " +
                 "file=`"$Source`">"
 
-            $logDir = Split-Path $resolvedLogfile
-            if ($logDir -and !(Test-Path $logDir)) {
-                New-Item -Path $logDir -ItemType Directory -Force | Out-Null
-            }
+            New-WitnessLogDirectory -LogPath $resolvedLogfile -ContextUser $contextUser | Out-Null
 
             $shouldWriteConsole = $true
             if ($Severity -eq 'Verbose') { $shouldWriteConsole = $verboseToConsole }
             elseif ($Severity -eq 'Debug') { $shouldWriteConsole = $debugToConsole }
 
             if ($WriteBackToHost -and $shouldWriteConsole) {
-                $displayComponent = $Component
-                if ($displayComponent.Length -gt 12) {
-                    $displayComponent = $displayComponent.Substring(0, 10) + '..'
-                }
-
-                $severityConfig = @{
-                    'Error'   = @{ Label = ' ERROR ';   LabelColor = 'Red';      MessageColor = 'Red' }
-                    'Warning' = @{ Label = ' WARNING '; LabelColor = 'Yellow';   MessageColor = 'Yellow' }
-                    'Info'    = @{ Label = ' INFO ';    LabelColor = 'Green';    MessageColor = 'White' }
-                    'Success' = @{ Label = ' SUCCESS '; LabelColor = 'Green';    MessageColor = 'Green' }
-                    'Verbose' = @{ Label = ' VERBOSE '; LabelColor = 'DarkGray'; MessageColor = 'DarkGray' }
-                    'Debug'   = @{ Label = ' DEBUG ';   LabelColor = 'Magenta';  MessageColor = 'Magenta' }
-                }
-
-                $config = $severityConfig[$Severity]
-                $finalMessageColor = if ($PSBoundParameters.ContainsKey('Color')) { $Color } else { $config.MessageColor }
-
-                Write-Host '[' -NoNewline -ForegroundColor Gray
-                Write-Host $config.Label -NoNewline -ForegroundColor $config.LabelColor
-                Write-Host '] [' -NoNewline -ForegroundColor Gray
-                Write-Host "$displayComponent" -NoNewline -ForegroundColor Blue
-                Write-Host '] [' -NoNewline -ForegroundColor Gray
-                Write-Host "$lineNumber" -NoNewline -ForegroundColor Cyan
-                Write-Host ']' -NoNewline -ForegroundColor Gray
-                Write-Host ': ' -NoNewline -ForegroundColor Magenta
-                Write-Host "$Message" -ForegroundColor $finalMessageColor
+                $messageColor = $null
+                if ($PSBoundParameters.ContainsKey('Color')) { $messageColor = [string]$Color }
+                Write-WitnessConsoleLine -Severity $Severity -Component $Component -LineNumber "$lineNumber" -Message $Message -MessageColor $messageColor
             }
 
             $shouldWriteLogfile = $true
@@ -306,116 +284,20 @@ function Write-Log {
             elseif ($Severity -eq 'Debug') { $shouldWriteLogfile = $debugToLogfile }
 
             if ($shouldWriteLogfile -and (Test-Path $resolvedLogfile)) {
-                $currentSize = (Get-Item $resolvedLogfile).Length / 1MB
-                if ($currentSize -ge $maxSizeMB) {
-                    $rotLogDir = Split-Path $resolvedLogfile
-                    $logBase = [System.IO.Path]::GetFileNameWithoutExtension($resolvedLogfile)
-                    $logExt = [System.IO.Path]::GetExtension($resolvedLogfile)
-                    $rotNum = 1
-                    do {
-                        $archiveName = '{0}_r{1:D2}{2}' -f $logBase, $rotNum, $logExt
-                        $archivePath = Join-Path $rotLogDir $archiveName
-                        $rotNum++
-                    } while (Test-Path $archivePath)
-
-                    $renamed = $false
-                    try {
-                        Rename-Item -Path $resolvedLogfile -NewName $archiveName -Force -ErrorAction Stop
-                        $renamed = $true
-                    }
-                    catch {
-                        Write-Warning "Write-Log: Could not rotate log to '$archiveName': $_"
-                    }
-
-                    if ($renamed) {
-                        $rotationMsg = "<![LOG[LOG ROTATION: Previous log archived to $archiveName (exceeded ${maxSizeMB}MB)]LOG]!>" +
-                            "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
-                            "context=`"$contextUser`" " +
-                            "type=`"1`" thread=`"$PID`" file=`"Write-Log.ps1`">"
-
-                        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-                        # cant use Write-Log here, file may not exist yet
-                        try {
-                            [System.IO.File]::WriteAllText($resolvedLogfile, "$rotationMsg$([System.Environment]::NewLine)", $utf8NoBom)
-                        }
-                        catch {
-                            Write-Warning "Write-Log: Failed to write rotation notice to '$resolvedLogfile': $_"
-                        }
-                    }
-                }
+                Invoke-WitnessRotation -LogPath $resolvedLogfile -MaxSizeMB $maxSizeMB -LogTime $LogTime -LogDate $LogDate -ContextUser $contextUser | Out-Null
             }
 
-            # sentinel before call prevents recursion
-            if ($autoCleanup -and (-not $script:WitnessCleanupRan) -and (Test-Path $resolvedLogfile)) {
-                $script:WitnessCleanupRan = $true
-                $logFolder = Split-Path $resolvedLogfile
-                if ($logFolder -and (Test-Path $logFolder)) {
-                    try {
-                        Clear-LogFile -LogFolder $logFolder -MaxAgeDays $maxAgeDays
-                    }
-                    catch {
-                        Write-Warning "Auto-cleanup failed: $_"
-                    }
-                }
-            }
+            # sentinel is set before the cleanup call to prevent recursion
+            Invoke-WitnessAutoCleanup -LogPath $resolvedLogfile -AutoCleanup $autoCleanup -MaxAgeDays $maxAgeDays -ContextUser $contextUser
 
             # readwrite share so concurrent readers arent blocked
             if ($shouldWriteLogfile) {
-                $retryCount = 0
-                $writeSucceeded = $false
-
-                while (-not $writeSucceeded -and $retryCount -le $MaxRetries) {
-                    $fileStream = $null
-                    $streamWriter = $null
-
-                    try {
-                        $fileMode = [System.IO.FileMode]::Append
-                        $fileAccess = [System.IO.FileAccess]::Write
-                        $fileShare = [System.IO.FileShare]::ReadWrite
-                        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-
-                        $fileStream = New-Object System.IO.FileStream($resolvedLogfile, $fileMode, $fileAccess, $fileShare)
-                        $streamWriter = New-Object System.IO.StreamWriter($fileStream, $utf8NoBom)
-                        $streamWriter.NewLine = [System.Environment]::NewLine
-                        $streamWriter.WriteLine($logline)
-                        $writeSucceeded = $true
-
-                        if ($retryCount -gt 0) {
-                            $retryNote = "<![LOG[WRITE-LOG FILE CONTENTION: Previous entry required $retryCount retry attempt(s) due to file lock on $resolvedLogfile]LOG]!>" +
-                                "<time=`"$LogTime`" date=`"$LogDate`" component=`"Write-Log`" " +
-                                "context=`"$contextUser`" " +
-                                "type=`"2`" thread=`"$PID`" file=`"Write-Log.ps1`">"
-                            $streamWriter.WriteLine($retryNote)
-                        }
-                    }
-                    catch [System.IO.IOException] {
-                        $retryCount++
-                        if ($retryCount -le $MaxRetries) {
-                            Start-Sleep -Milliseconds ([int]($RetryDelay * 1000))
-                        }
-                        else {
-                            Write-Warning "Failed to write to log after $MaxRetries retries (file locked): $resolvedLogfile"
-                        }
-                    }
-                    catch {
-                        Write-Warning "Failed to write to log file '$resolvedLogfile': $_"
-                        break
-                    }
-                    finally {
-                        try { if ($null -ne $streamWriter) { $streamWriter.Dispose() } } catch { }
-                        try { if ($null -ne $fileStream)   { $fileStream.Dispose()   } } catch { }
-                    }
-                }
+                Add-WitnessLogLine -LogPath $resolvedLogfile -Line $logline -MaxRetries $MaxRetries -RetryDelay $RetryDelay -LogTime $LogTime -LogDate $LogDate -ContextUser $contextUser | Out-Null
             }
         }
         finally {
             if ($isSCCMDrive) {
-                try {
-                    Set-Location $originalLocation -ErrorAction SilentlyContinue
-                }
-                catch {
-                    Write-Warning "Write-Log: Could not restore CMSite location: $_"
-                }
+                Restore-WitnessLocation -Location $originalLocation
             }
         }
     }

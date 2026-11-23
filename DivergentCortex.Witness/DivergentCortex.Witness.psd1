@@ -9,7 +9,7 @@
 @{
     # Module identity
     RootModule           = 'DivergentCortex.Witness.psm1'
-    ModuleVersion        = '1.0.1'
+    ModuleVersion        = '2026.11.23.062'
     GUID                 = 'b4e2f1c3-8d47-4a9e-b5f0-3c6a1e2d8b9f'
     Author               = 'Curtis Leggett'
     CompanyName          = 'Divergent Cortex'
@@ -34,13 +34,13 @@
     VariablesToExport    = @()
     AliasesToExport      = @()
 
-    # Module tags for PowerShell Gallery discovery (Fix [8]: corrected ProjectUri casing)
+    # Module tags for PowerShell Gallery discovery
     PrivateData          = @{
         PSData = @{
             Tags         = @('Logging', 'CMTrace', 'Cross-Platform', 'Structured-Logging', 'PowerShell', 'DivergentCortex', 'Witness')
             ProjectUri   = 'https://github.com/DivergentCortex/Witness'
             LicenseUri   = 'https://github.com/DivergentCortex/Witness/blob/main/LICENSE'
-            ReleaseNotes = 'v1.0.1: Review fixes - caller-scope path resolution, per-write context, cleanup sentinel lifecycle, macOS detection, line-ending consistency, Write-LogFinal ValidateSet.'
+            ReleaseNotes = 'See docs/CHANGELOG.md in the repository.'
         }
     }
 }
