@@ -181,46 +181,14 @@ When a log file reaches the size threshold (default 10 MB, overridable via `$Glo
 
 On Windows, if the current working directory is on a ConfigMgr `CMSite` PSDrive (detected via `$originalLocation.Provider.Name -eq 'CMSite'`), Write-Log hops to `C:` before file I/O and restores the original location in a `finally` block. This is skipped entirely when `$script:WitnessIsWindows` is false.
 
-## Standalone distribution and preserved lineage
+## Standalone script
 
-`Public/`, the runtime helpers in `Private/`, and the loader are the only authoring sources.
-`donor-code/Write-Log.ps1` is a generated single-file distribution of those sources, not a
-separate implementation. It retains the three public command names, shared private helpers,
-10 MB rotation default, redaction, local timestamps, native preference gates and cleanup
-sentinel. Dot-sourcing requires no module installation or import. The generator omits the
-loader's strict-mode command so it does not change the caller's strict-mode setting.
-A dot-sourced distribution necessarily places its helper functions and script state in the
-consumer scope; manifest-based imports keep those helpers private.
+`Write-Log/Write-Log.ps1` is the single-file form, for scripts that dot-source a logger
+instead of importing a module. It carries the same three public commands. Dot-sourcing puts
+its helper functions and script state in the caller's scope, which a module import keeps
+private, and it does not set strict mode so it never changes the caller's setting.
 
-From the module directory:
-
-```powershell
-./Build-WitnessDonor.ps1
-./Build-WitnessDonor.ps1 -OutputPath /tmp/witness-release/Write-Log.ps1 -WhatIf
-./Invoke-WitnessTests.ps1 -Suite DonorParity.Tests.ps1
-```
-
-`-OutputPath` defaults to `donor-code/Write-Log.ps1`. `-WhatIf` reads and parses sources
-without changing the output artifact; build diagnostics still use
-`logs/build.witness_YYYYMMDD.log`. The build-only `Private/New-WitnessDonorArtifact.ps1`
-reads the loader's source order and emits UTF-8 without BOM. Output has no build timestamp.
-The entry returns `Ok`, `Written`, `OutputPath`, `SourceCount`, and `Reason`; exit 0 means a
-verified write or a declined ShouldProcess operation, and exit 1 means failure.
-Rebuild before release synchronization. Never edit the generated artifact by hand.
-
-`original-src/Write-Log.ps1` preserves the 596-line legacy script.
-`original-src/Write-Log.20260629.ps1` preserves the 1097-line standalone rewrite from June 29.
-These byte-preserved historical snapshots contain employer references and are not published.
-The June rewrite already carried the module's cross-platform context, quiet defaults,
-local timestamps and native preference support. Those are not differences between today's
-module and generated distribution. The older snapshot's Windows-only context, enabled
-debug defaults and UTC-offset timestamps remain history, not restored behavior.
-
-The standalone repository retains its own README, SECURITY, CONTRIBUTING, workflows,
-license and root changelog. Its release process materializes actual canonical source files
-in a separate release tree; the local development symlink must never replace GitHub source
-files. GitHub publication is an explicit operator action, not a side effect of a canonical
-source edit.
+## Banner config
 
 The shipped `Get-BannerConfig.ps1` and `config/banner.psd1` are not loaded or consumed by
 `Initialize-Log`. Its public parameters remain LogFilePath, ScriptName and Version.
