@@ -3,10 +3,6 @@
 !/logs/README.md
 *.log
 
-# python and lint runtime caches
-__pycache__/
-.ruff_cache/
-
 # Example script runtime output (contains real hostnames)
 DivergentCortex.Witness/examples/logs/
 
@@ -17,12 +13,8 @@ Thumbs.db
 .vscode/
 .claude/
 
-# Donor reference code - excluded from public release (contains employer reference)
-DivergentCortex.Witness/donor-code/
-
 # Archive artifacts
 *.7z
 .archive/
-
-# local canonical module bridge
-/_modules
+.archives/
+.remember/
