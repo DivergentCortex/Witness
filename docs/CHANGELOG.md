@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026.11.23.062] - Bring the fleet copy's Witness work back into this repo
+### Bring the fleet copy's Witness work back into this repo
+
+Work on Witness after 1.0.1 happened in a copy at ~/projects/modules/ps/DivergentCortex.Witness that was meant to be a symlink to this folder, so none of it reached this repo or GitHub. That copy is merged here:
+
+- Write-Log, Initialize-Log and Get-BannerConfig no longer throw. A failure inside the logger goes to Write-WitnessFailureLine as one Warning line in the log file, or the error stream when there is no usable log file.
+- Messages are redacted before any sink sees them (ConvertTo-WitnessRedactedText).
+- The inline file writing, rotation, cleanup, console line, directory creation, context user and CMSite location restore moved into their own Private helpers: Add-WitnessLogLine, Invoke-WitnessRotation, Invoke-WitnessAutoCleanup, Write-WitnessConsoleLine, New-WitnessLogDirectory, Get-WitnessContextUser, Restore-WitnessLocation, Write-WitnessBannerFile, Write-WitnessFailureLine.
+- tests gains Witness.FailurePath.Tests.ps1 and Redaction.Tests.ps1, and the main suite is updated. Invoke-WitnessTests.ps1 runs the two Pester suites. Redaction.Tests.ps1 is a plain script that reads shared cases from the fleet tree (MODULES_ROOT), so it does not run from this repo alone yet.
+- module docs ARCHITECTURE and DESIGN take the newer text.
+
+Left out on purpose: the donor build (Build-WitnessDonor.ps1, New-WitnessDonorArtifact.ps1, DonorParity.Tests.ps1, donor-code/) and original-src/, which are more standalone Write-Log.ps1 copies; Write-Log/Write-Log.ps1 stays the one standalone script. config/banner.psd1 keeps this repo's alignment. Verified: DivergentCortex.Witness.Tests 80/80, Witness.FailurePath 3/3, redaction cases 24/24.
+
 ## [2026.11.03.061] - 2026-11-03
 Added the standalone repository index for the maintenance tools and ownership docs, keeping root publication files intact and pending activation explicitly labeled. Task 3147.
 

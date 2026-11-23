@@ -1,6 +1,6 @@
 # DivergentCortex.Witness - Design Spec (DRAFT for review)
 
-Status: Reviewed (3 reviewers: huginn, muninn, Codex) and built. Module ships as DivergentCortex.Witness v1.0.1.
+Status: Reviewed and built. Module ships as DivergentCortex.Witness v1.0.1.
 
 ## Goal
 
