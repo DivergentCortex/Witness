@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026.11.23.064] - Stop publishing the _modules link, drop the standalone script from the docs
+### Stop publishing the _modules link, drop the standalone script from the docs
+
+An automatic checkpoint committed the local _modules symlink after its .gitignore entry was removed, so the published repo carried a link to a path on the author's machine. It is untracked again and /_modules is back in .gitignore. The standalone Write-Log.ps1 moved out of this repo to its own project, so ARCHITECTURE and INDEX no longer list it.
+
 ## [2026.11.23.063] - One docs folder, no release kit, redaction runs on GitHub
 ### One docs folder, no release kit, redaction runs on GitHub
 

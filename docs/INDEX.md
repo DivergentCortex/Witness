@@ -10,6 +10,5 @@
 | [SECURITY](SECURITY.md) | How to report a vulnerability |
 | `DivergentCortex.Witness/` | The module: manifest, loader, Public, Private, config, examples, tests |
 | `DivergentCortex.Witness/Invoke-WitnessTests.ps1` | Runs the three Pester suites with per-suite totals |
-| `Write-Log/Write-Log.ps1` | Standalone single-file script for dot-sourcing |
 | `.github/workflows/test.yml` | Pester on Linux, macOS, Windows pwsh and Windows PowerShell 5.1 |
 | [Log inventory](../logs/README.md) | Log files written by the test runner |

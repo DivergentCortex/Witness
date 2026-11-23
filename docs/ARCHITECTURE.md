@@ -36,8 +36,6 @@ DivergentCortex.Witness/             The module, the only folder that ships
     Witness.FailurePath.Tests.ps1       Logger-internal failure handling
     Redaction.Tests.ps1                 Redaction cases and the file-line check
     redaction_cases.json                Shared redaction cases
-Write-Log/
-  Write-Log.ps1                      Standalone single-file script for dot-sourcing
 docs/                                README, ARCHITECTURE, CROSS-PLATFORM, INDEX, CHANGELOG,
                                      CONTRIBUTING, SECURITY
 .github/workflows/test.yml           Pester on Linux, macOS, Windows pwsh and Windows 5.1
@@ -180,13 +178,6 @@ When a log file reaches the size threshold (default 10 MB, overridable via `$Glo
 ## SCCM drive handling
 
 On Windows, if the current working directory is on a ConfigMgr `CMSite` PSDrive (detected via `$originalLocation.Provider.Name -eq 'CMSite'`), Write-Log hops to `C:` before file I/O and restores the original location in a `finally` block. This is skipped entirely when `$script:WitnessIsWindows` is false.
-
-## Standalone script
-
-`Write-Log/Write-Log.ps1` is the single-file form, for scripts that dot-source a logger
-instead of importing a module. It carries the same three public commands. Dot-sourcing puts
-its helper functions and script state in the caller's scope, which a module import keeps
-private, and it does not set strict mode so it never changes the caller's setting.
 
 ## Banner config
 

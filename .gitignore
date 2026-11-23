@@ -18,3 +18,6 @@ Thumbs.db
 .archive/
 .archives/
 .remember/
+
+# a local link to the fleet modules tree, never part of the published repo
+/_modules
