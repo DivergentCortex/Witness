@@ -13,7 +13,8 @@ param (
 )
 
 Import-Module (Join-Path $PSScriptRoot 'DivergentCortex.Witness.psd1') -Force -ErrorAction Stop
-$testLog = Join-Path $PSScriptRoot ("logs/test.witness_{0}.log" -f (Get-Date -Format 'yyyyMMdd'))
+# one logs folder at the repository root
+$testLog = Join-Path (Split-Path -Parent $PSScriptRoot) ("logs/test.witness_{0}.log" -f (Get-Date -Format 'yyyyMMdd'))
 Initialize-Log -LogFilePath $testLog -ScriptName 'Invoke-WitnessTests'
 
 $exitCode = 0

@@ -9,7 +9,7 @@
 @{
     # Module identity
     RootModule           = 'DivergentCortex.Witness.psm1'
-    ModuleVersion        = '2026.11.23.062'
+    ModuleVersion        = '2026.11.23.063'
     GUID                 = 'b4e2f1c3-8d47-4a9e-b5f0-3c6a1e2d8b9f'
     Author               = 'Curtis Leggett'
     CompanyName          = 'Divergent Cortex'
