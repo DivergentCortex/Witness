@@ -1,0 +1,23 @@
+[
+  {"name": "github classic ghp", "input": "token ghp\u005fA1b2C3d4E5f6G7h8I9j0 used", "expected": "token [REDACTED] used"},
+  {"name": "github classic gho", "input": "token gho\u005fA1b2C3d4E5f6G7h8I9j0 used", "expected": "token [REDACTED] used"},
+  {"name": "github classic ghu", "input": "token ghu\u005fA1b2C3d4E5f6G7h8I9j0 used", "expected": "token [REDACTED] used"},
+  {"name": "github classic ghs", "input": "token ghs\u005fA1b2C3d4E5f6G7h8I9j0 used", "expected": "token [REDACTED] used"},
+  {"name": "github classic ghr", "input": "token ghr\u005fA1b2C3d4E5f6G7h8I9j0 used", "expected": "token [REDACTED] used"},
+  {"name": "github classic below minimum is left alone", "input": "ghp_short123456789", "expected": "ghp_short123456789"},
+  {"name": "github fine-grained pat", "input": "x github\u005fpat\u005fA1b2C3d4E5_f6G7h8I9j0K1 y", "expected": "x [REDACTED] y"},
+  {"name": "aws access key id incl vendor example", "input": "key AK\u0049AIOSFODNN7EXAMPLE end", "expected": "key [REDACTED] end"},
+  {"name": "slack xoxb", "input": "hook xo\u0078b-1234567890-abcdef here", "expected": "hook [REDACTED] here"},
+  {"name": "slack xoxa", "input": "hook xo\u0078a-1234567890-abcdef here", "expected": "hook [REDACTED] here"},
+  {"name": "slack xoxp", "input": "hook xo\u0078p-1234567890-abcdef here", "expected": "hook [REDACTED] here"},
+  {"name": "slack xoxr", "input": "hook xo\u0078r-1234567890-abcdef here", "expected": "hook [REDACTED] here"},
+  {"name": "slack xoxs", "input": "hook xo\u0078s-1234567890-abcdef here", "expected": "hook [REDACTED] here"},
+  {"name": "pem private key header and body", "input": "before -----BEGIN RSA PRIVATE K\u0045Y-----\nMIIEowIBAAKCAQEA7\nabc/def+ghi==\n-----END RSA PRIVATE KEY----- after", "expected": "before [REDACTED]-----END RSA PRIVATE KEY----- after"},
+  {"name": "bearer header", "input": "Authorization: Bear\u0065r abcdefghijklmnopqrstuvwxyz0123", "expected": "Authorization: [REDACTED]"},
+  {"name": "bearer below minimum is left alone", "input": "Bearer short", "expected": "Bearer short"},
+  {"name": "url user and password", "input": "remote https\u003a//alice\u003as3cr3tP4ss@github.com/org/repo.git", "expected": "remote https://alice:[REDACTED]@github.com/org/repo.git"},
+  {"name": "url single-field token userinfo", "input": "push https\u003a//aaaaaaaaaaaaaaaaaaaaaaaa@gitlab.example/org/repo", "expected": "push https://[REDACTED]@gitlab.example/org/repo"},
+  {"name": "url short username is untouched", "input": "https://alice@github.com/x", "expected": "https://alice@github.com/x"},
+  {"name": "plain text is untouched", "input": "ordinary line with no secrets: 42 items", "expected": "ordinary line with no secrets: 42 items"},
+  {"name": "already redacted text is stable", "input": "[REDACTED]", "expected": "[REDACTED]"}
+]

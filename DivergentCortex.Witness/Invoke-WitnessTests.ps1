@@ -8,8 +8,8 @@
 #>
 [CmdletBinding()]
 param (
-    [ValidateSet('DivergentCortex.Witness.Tests.ps1', 'Witness.FailurePath.Tests.ps1')]
-    [string[]]$Suite = @('DivergentCortex.Witness.Tests.ps1', 'Witness.FailurePath.Tests.ps1')
+    [ValidateSet('DivergentCortex.Witness.Tests.ps1', 'Witness.FailurePath.Tests.ps1', 'Redaction.Tests.ps1')]
+    [string[]]$Suite = @('DivergentCortex.Witness.Tests.ps1', 'Witness.FailurePath.Tests.ps1', 'Redaction.Tests.ps1')
 )
 
 Import-Module (Join-Path $PSScriptRoot 'DivergentCortex.Witness.psd1') -Force -ErrorAction Stop

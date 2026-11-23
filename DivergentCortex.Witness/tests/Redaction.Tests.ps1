@@ -1,48 +1,51 @@
-# Redaction tests for DivergentCortex.Witness.
-# Runs the shared cases in ts/tslogger/tests/redaction_cases.json, which pylogger, tslogger and
-# shlogger run too, so every language logger must produce identical text.
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+# redaction cases shared with the divergent cortex python, typescript and shell loggers,
+# so every language logger produces identical text from the same input
 
-$moduleRoot = Split-Path -Parent $PSScriptRoot
-# The modules root is MODULES_ROOT when set, else the directory the suite is run from
-# (documented: run from the modules root).
-$modulesRoot = if ($env:MODULES_ROOT) { $env:MODULES_ROOT } else { (Get-Location).Path }
-$casesPath = Join-Path $modulesRoot 'ts/tslogger/tests/redaction_cases.json'
-if (-not (Test-Path -LiteralPath $casesPath)) {
-    Write-Output "FAIL: shared cases not found at $casesPath (run from the modules root or set MODULES_ROOT)"
-    exit 1
-}
-Import-Module $moduleRoot -Force
-
-$script:Failures = 0
-function Assert-That {
-    param([string]$Description, [bool]$Condition)
-    if ($Condition) { Write-Output "PASS: $Description" }
-    else { Write-Output "FAIL: $Description"; $script:Failures++ }
+BeforeDiscovery {
+    # windows powershell 5.1 passes a parsed json array down the pipeline as one object
+    $parsed = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'redaction_cases.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    $RedactionCases = foreach ($case in $parsed) {
+        @{ Name = $case.name; InputText = $case.input; Expected = $case.expected }
+    }
 }
 
-$module = Get-Module DivergentCortex.Witness
-$cases = Get-Content -LiteralPath $casesPath -Raw -Encoding UTF8 | ConvertFrom-Json
-foreach ($case in $cases) {
-    $actual = & $module { param($text) ConvertTo-WitnessRedactedText -Text $text } $case.input
-    Assert-That "redact: $($case.name)" ($actual -ceq $case.expected)
+BeforeAll {
+    $moduleRoot = Split-Path -Parent $PSScriptRoot
+    Import-Module (Join-Path $moduleRoot 'DivergentCortex.Witness.psd1') -Force -ErrorAction Stop
+    $script:WitnessModule = Get-Module DivergentCortex.Witness
 }
 
-$longRun = 'a' * 200000
-$timer = [System.Diagnostics.Stopwatch]::StartNew()
-$null = & $module { param($text) ConvertTo-WitnessRedactedText -Text $text } $longRun
-$timer.Stop()
-Assert-That "a 200000 character unbroken run redacts in $([int]$timer.Elapsed.TotalMilliseconds) ms (limit 2000 ms)" ($timer.Elapsed.TotalMilliseconds -lt 2000)
+Describe 'ConvertTo-WitnessRedactedText' {
+    It 'redacts: <Name>' -ForEach $RedactionCases {
+        $actual = & $script:WitnessModule { param($text) ConvertTo-WitnessRedactedText -Text $text } $InputText
+        $actual | Should -BeExactly $Expected
+    }
 
-$workDir = Join-Path ([System.IO.Path]::GetTempPath()) "witness-redaction-test-$PID"
-$logPath = Join-Path $workDir 'redact.log'
-Initialize-Log -LogFilePath $logPath -ScriptName 'RedactionTest' -Version '1.0'
-Write-Log -Message 'pushing with ghp_A1b2C3d4E5f6G7h8I9j0 to https://bob:hunter2hunter2@host/r.git' -Severity Info -WriteBackToHost:$false
-$content = Get-Content -LiteralPath $logPath -Raw -Encoding UTF8
+    It 'redacts a 200000 character unbroken run in under 2000 ms' {
+        $longRun = 'a' * 200000
+        $timer = [System.Diagnostics.Stopwatch]::StartNew()
+        $null = & $script:WitnessModule { param($text) ConvertTo-WitnessRedactedText -Text $text } $longRun
+        $timer.Stop()
+        $timer.Elapsed.TotalMilliseconds | Should -BeLessThan 2000
+    }
+}
 
-Assert-That 'log file holds neither the token nor the password' (-not $content.Contains('ghp_A1b2C3d4E5f6G7h8I9j0') -and -not $content.Contains('hunter2hunter2'))
-Assert-That 'log file line carries the redacted message' ($content.Contains('<![LOG[pushing with [REDACTED] to https://bob:[REDACTED]@host/r.git]LOG]!>'))
+Describe 'Write-Log redaction in the log file' {
+    BeforeAll {
+        # the token is assembled here so the source holds no credential-shaped literal
+        $script:Token = 'ghp_' + 'A1b2C3d4E5f6G7h8I9j0'
+        $script:LogPath = Join-Path $TestDrive 'redact.log'
+        Initialize-Log -LogFilePath $script:LogPath -ScriptName 'RedactionTest' -Version '1.0' 6>$null
+        Write-Log -Message "pushing with $script:Token to https://bob:hunter2hunter2@host/r.git" -Severity Info -WriteBackToHost:$false
+        $script:Content = Get-Content -LiteralPath $script:LogPath -Raw -Encoding UTF8
+    }
 
-if ($script:Failures -gt 0) { exit 1 }
-exit 0
+    It 'leaves neither the token nor the password in the file' {
+        $script:Content.Contains($script:Token) | Should -BeFalse
+        $script:Content.Contains('hunter2hunter2') | Should -BeFalse
+    }
+
+    It 'writes the redacted message on the log line' {
+        $script:Content.Contains('<![LOG[pushing with [REDACTED] to https://bob:[REDACTED]@host/r.git]LOG]!>') | Should -BeTrue
+    }
+}
