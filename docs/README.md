@@ -118,7 +118,7 @@ Write-Log and Initialize-Log resolve the log file path through a layered chain. 
 3. `$script:WitnessLogFilePath` (set internally by Initialize-Log)
 4. `$Global:LogFilePath` (back-compat with the original dot-source pattern)
 
-If none of these resolve, Write-Log throws. The safest pattern under `Import-Module` is to pass the path to `Initialize-Log -LogFilePath` explicitly, or set `$Global:LogFilePath` before the first call.
+If none of these resolve, Write-Log does not throw: the entry is not written and a warning line goes to the error stream. The safest pattern under `Import-Module` is to pass the path to `Initialize-Log -LogFilePath` explicitly, or set `$Global:LogFilePath` before the first call.
 
 ## How it works
 
@@ -128,7 +128,7 @@ Built modular for easy maintenance, easy additions, and a readable structure.
 
 The adapter result is used only for the Initialize-Log start banner. Write-Log resolves `context=` cheaply per write: `WindowsIdentity.GetCurrent().Name` on Windows, `[Environment]::UserDomainName\UserName` on non-Windows. This keeps impersonation-correct identity on Windows without running the full adapter on every log line.
 
-For details on module internals, see [docs/ARCHITECTURE.md](DivergentCortex.Witness/docs/ARCHITECTURE.md).
+For details on module internals, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Native debug and verbose control
 
@@ -186,7 +186,7 @@ The module reaches full behavioral parity on Linux and macOS for everything that
 - **SCCM/CMSite drive handling:** Windows-only. The module detects when the working directory is on a ConfigMgr PSDrive, hops to `C:` for file I/O, then restores the original location. This code path is skipped entirely on non-Windows.
 - **Elevation:** Windows uses `WindowsPrincipal.IsInRole(Administrator)`. PowerShell 7.4+ on Linux/macOS uses `[Environment]::IsPrivilegedProcess`; older builds fall back to `id -u`.
 
-For the full research with sources, see [docs/CROSS-PLATFORM.md](DivergentCortex.Witness/docs/CROSS-PLATFORM.md).
+For the full research with sources, see [docs/CROSS-PLATFORM.md](docs/CROSS-PLATFORM.md).
 
 ## Viewing logs
 

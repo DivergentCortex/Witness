@@ -3,12 +3,11 @@
 ## Purpose
 
 DivergentCortex.Witness is a CMTrace-compatible structured logger for PowerShell, rebuilt from the
-Write-Log donor script (`donor-code/Write-Log.ps1`). The donor is a Windows-only function that uses
-Win32 security principals, WMI, and SCCM APIs to populate CMTrace log fields (context, component,
-thread). The rebuild targets Windows, Linux, and macOS under PowerShell 7.
-
-The donor script is the untouched specification. It is not modified. The rebuild reads its behavior,
-replicates it where the platform allows, and substitutes verified equivalents where it does not.
+original Windows-only Write-Log script, called "the donor" below. That script used Win32 security
+principals, WMI, and SCCM APIs to populate CMTrace log fields (context, component, thread). The
+rebuild targets Windows, Linux, and macOS under PowerShell 7, keeping the original behavior where the
+platform allows and substituting verified equivalents where it does not. Line numbers below refer to
+that original script.
 
 This document records the verified cross-platform equivalent for each Windows-specific identity and
 context mechanism the donor uses. Every idiom below was independently researched and then verified

@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026.11.23.063] - One docs folder, no release kit, redaction runs on GitHub
+### One docs folder, no release kit, redaction runs on GitHub
+
+The Python release kit (Sync-WitnessRelease.py, Test-WitnessRelease.py, Test-WitnessReleaseIndex.py, test_witness_release.py and the witness_release package) existed to copy the fleet copy of the module into this repo. That copy is now a symlink to this folder, so nothing needs copying and the kit is archived, along with docs/TOOLS.md and docs/HOOKS.md, which only described it, and its __pycache__ and .ruff_cache.
+
+Docs live in one place. README, SECURITY and CONTRIBUTING moved from the repo root into docs/, and the root README.md is a symlink to docs/README.md, like CHANGELOG.md. The module's own docs folder is gone: its ARCHITECTURE.md replaces the release-kit architecture doc in docs/, CROSS-PLATFORM.md moved to docs/, and DESIGN.md, the pre-build design draft, is archived. ARCHITECTURE describes the repository layout, the standalone Write-Log/Write-Log.ps1 and the banner config, with the donor build and original-src sections removed. INDEX lists what is actually here. The README links point at docs/, and it no longer says Write-Log throws on a missing log path.
+
+tests/Redaction.Tests.ps1 is a Pester suite reading tests/redaction_cases.json, a copy of the case file the Python, TypeScript and shell loggers run, so it no longer needs the fleet modules tree and the GitHub workflow can run it. The token in its file-line check is assembled at run time so the source holds no credential-shaped string. Invoke-WitnessTests.ps1 runs all three suites and writes its log to the root logs/ folder; logs/README.md lists that file. .gitignore drops the donor-code, Python cache and _modules entries and ignores .archives and .remember.
+
+Verified with Invoke-WitnessTests.ps1: DivergentCortex.Witness.Tests 80/80, Witness.FailurePath 3/3, Redaction 24/24.
+
 ## [2026.11.23.062] - Bring the fleet copy's Witness work back into this repo
 ### Bring the fleet copy's Witness work back into this repo
 

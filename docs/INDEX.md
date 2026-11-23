@@ -2,20 +2,14 @@
 
 | Path | Role |
 | --- | --- |
-| [Root README](../README.md) | Existing module overview and installation |
-| [ARCHITECTURE](ARCHITECTURE.md) | Canonical/development/release boundaries |
-| [TOOLS](TOOLS.md) | Maintenance CLI contracts and prerequisites |
-| [HOOKS](HOOKS.md) | Guard activation state and required commit chain |
-| [CHANGELOG](CHANGELOG.md) | Attributable changes and verification limits |
-| `DivergentCortex.Witness/` | Runtime module; approved canonical link cutover pending |
-| `Sync-WitnessRelease.py` | Manual dry-run/apply CLI |
-| `Test-WitnessReleaseIndex.py` | Candidate-check CLI, not installed as hook yet |
-| `Test-WitnessRelease.py` | Sanctioned pytest fixture runner |
-| `witness_release/paths.py` | Project anchors through canonical pypaths |
-| `witness_release/guard.py` | Candidate-index mode and required-file rules |
-| `witness_release/sync.py` | Release plan, donor invocation and verified copy |
-| `test_witness_release.py` | Permanent guard/sync fixtures |
-| [Log inventory](../logs/README.md) | Canonical logger targets |
-| `_modules` | Ignored local bridge to canonical fleet families |
-
-Root security, contribution, license and `.github` content are preserved.
+| [README](README.md) | What Witness does, install, quick start, parameters, configuration |
+| [ARCHITECTURE](ARCHITECTURE.md) | Module internals: loader, platform adapter, path resolution, rotation, redaction, failure path |
+| [CROSS-PLATFORM](CROSS-PLATFORM.md) | Per-mechanism research behind the Linux and macOS behavior |
+| [CHANGELOG](CHANGELOG.md) | Every change, newest first |
+| [CONTRIBUTING](CONTRIBUTING.md) | Workflow, code standards, platform scope |
+| [SECURITY](SECURITY.md) | How to report a vulnerability |
+| `DivergentCortex.Witness/` | The module: manifest, loader, Public, Private, config, examples, tests |
+| `DivergentCortex.Witness/Invoke-WitnessTests.ps1` | Runs the three Pester suites with per-suite totals |
+| `Write-Log/Write-Log.ps1` | Standalone single-file script for dot-sourcing |
+| `.github/workflows/test.yml` | Pester on Linux, macOS, Windows pwsh and Windows PowerShell 5.1 |
+| [Log inventory](../logs/README.md) | Log files written by the test runner |
